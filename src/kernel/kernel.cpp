@@ -1,4 +1,4 @@
-#include "../include/kernel.h"
+#include "kernel.h"
 
 using namespace myos::common;
 
@@ -46,7 +46,7 @@ extern "C" void callConstructors() {
 
 
 extern "C" void kernelMain(const void *multiboot_structure, uint32_t /*multiboot_magic*/) {
-    printf("Hello World!");
+    printf("Hello World! MIAOMIAOMIAO");
     printf("As we can!");
     while (1);
 }

@@ -1,7 +1,7 @@
 GPPPARAMS = -m32 -Iinclude -fno-use-cxa-atexit -fleading-underscore -fno-exceptions -fno-builtin -nostdlib -fno-rtti -fno-pie
 
 ASPARAMS = --32
-LDPARAMS = -melf_i386 -no-pie
+LDPARAMS = -melf_i386 -no -pie
 
 objects = obj/loader.o \
           obj/kernel.o
@@ -25,7 +25,7 @@ mykernel.iso: mykernel.bin
 	mkdir iso/boot
 	mkdir iso/boot/grub
 	cp $< iso/boot/
-	echo 'set timeout=0' > iso/boot/grub/grub.cfg
+	echo 'set timeout=10' > iso/boot/grub/grub.cfg
 	echo 'set default=0' >> iso/boot/grub/grub.cfg
 	echo '' >> iso/boot/grub/grub.cfg
 	echo 'menuentry "my os" {' >> iso/boot/grub/grub.cfg
