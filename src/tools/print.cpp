@@ -1,23 +1,9 @@
 #include "print.h"
-
+int add_int(int x, int y) {
+	return x + y;
+}
 namespace myos {
 	namespace tools {
-
-
-		int add_int(int x, int y) {
-			return x + y;
-		}
-
-		void uint8_t2chars(uint8_t num,char* arr) {
-			char tmp[] = "000";
-			uint8_t index = 2;
-			while (num != 0) {
-				arr[index--] = num % 10;
-				num /= 10;
-			}
-			arr = tmp;
-		}
-
 		void printf(const char* str) {
 			static uint16_t* VideoMemory = (uint16_t*)0xb8000;
 			static uint8_t x = 0, y = 0;
