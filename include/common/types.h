@@ -6,8 +6,7 @@
 #define MYOS_TYPES_H
 
 namespace myos {
-    namespace common {
-        typedef char int8_t;
+        typedef char int8_t; 
         typedef unsigned char uint8_t;
         typedef short int16_t;
         typedef unsigned short uint16_t;
@@ -18,7 +17,6 @@ namespace myos {
 
         typedef const char *string;
         typedef uint32_t size_t;
-    }
 }
 
 #endif //MYOS_TYPES_H
