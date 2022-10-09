@@ -1,12 +1,10 @@
 #include "interrupts.h"
-
-void printf(const char* str);
-void printfHex(char* str, myos::uint8_t key);
+#include "print.h"
+using namespace myos::tools;
 namespace myos {
 	namespace kernel {
 		InterruptManager::GateDescriptor InterruptManager::interruptDescriptorTable[256];
 		InterruptManager* InterruptManager::ActiveInterruptManager = 0;
-
 
 		InterruptHandler::InterruptHandler(uint8_t interrupnumber, InterruptManager* interruptManager) {
 			this->interrupnumber = interrupnumber;
@@ -41,9 +39,10 @@ namespace myos {
 		}
 
 		InterruptManager::InterruptManager(uint16_t hardwareInterruptOffset, GlobalDescriptorTable* gdt) :
-			picMasterCommand(0x20),
+			// 设置初始化端口
+			picMasterCommand(0x20), //主芯片端口
 			picMasterData(0x21),
-			picSlaveCommand(0xA0),
+			picSlaveCommand(0xA0), //从芯片端口
 			picSlaveData(0xA1) {
 			uint16_t codeSegment = (gdt->CodeSegmentSelector()) << 3;
 			this->hardwareInterruptOffset = hardwareInterruptOffset;
@@ -94,17 +93,30 @@ namespace myos {
 			SetInterruptDescriptorTableEntry(hardwareInterruptOffset + 0x0F, codeSegment, &HandleInterruptRequest0x0F, 0, IDT_INTERRUPT_GATE);
 			SetInterruptDescriptorTableEntry(hardwareInterruptOffset + 0x31, codeSegment, &HandleInterruptRequest0x31, 0, IDT_INTERRUPT_GATE);
 
-			picMasterCommand.write(0x11);
+			/*
+			* 初始化顺序
+			* 1. 往端口20h（主片）和A0h（从片)发送ICW1
+			* 2. 往端口21h（主片）和A1h（从片)发送ICW2
+			* 3. 往端口21h（主片）和A1h（从片)发送ICW3
+			* 4. 往端口21h（主片）和A1h（从片)发送ICW4
+			*/
+
+
+			// 11 表示初始化命令开始，是ICW1 命令字
+			picMasterCommand.write(0x11); 
 			picSlaveCommand.write(0x11);
 
+			// IRQ0 对应中断向量 0x20
+			// Linux系统把主片的ICW2设置为0x20，表示主片中断请求0级-7级对应的中断号范围是0x20-0x27。
+			// 而从片的ICW2被设置成0x28，表示从片中断请求8级-15级对应的中断号范围是0x28-0x2f
 			picMasterData.write(hardwareInterruptOffset);
 			picSlaveData.write(hardwareInterruptOffset + 8);
 
-			picMasterData.write(0x04);
-			picSlaveData.write(0x02);
+			picMasterData.write(0x04); // 主8259, ICW3.
+			picSlaveData.write(0x02); // 从8259, ICW3.
 
-			picMasterData.write(0x01);
-			picSlaveData.write(0x01);
+			picMasterData.write(0x01); // 主8259, ICW4.
+			picSlaveData.write(0x01); // 从8259, ICW4.
 
 			picMasterData.write(0x00);
 			picSlaveData.write(0x00);
@@ -146,8 +158,8 @@ namespace myos {
 			if (handlers[interruptNumber] != 0) {
 				esp = handlers[interruptNumber]->HandlerInterrupt(esp);
 			}else if (interruptNumber != hardwareInterruptOffset) {
-				char* foo = (char*)"[InterruptManager::DoHandleInterrupt] unknown interrupts 0x00";
-				printfHex(foo,interruptNumber);
+				char* foo = (char*)"[InterruptManager::DoHandleInterrupt] unknown interrupts %lx\n";
+				myos::tools::printfHex(foo,interruptNumber);
 			}
 
 			if (hardwareInterruptOffset <= interruptNumber && interruptNumber < hardwareInterruptOffset + 16) {

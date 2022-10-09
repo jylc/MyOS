@@ -3,6 +3,12 @@ set(CMAKE_CXX_FLAGS "-march=corei7 -mtune=corei7 -m32 -Di386 -m32 -Iinclude -fno
 set(CMAKE_C_FLAGS "-march=corei7 -mtune=corei7 -m32 -Di386 -m32 -Iinclude -fno-use-cxa-atexit -fleading-underscore -fno-exceptions -fno-builtin -nostdlib -fno-rtti -fno-pie")
 set(CMAKE_ASM_FLAGS "-m32") 
 
+if(test_flag)
+	set(CMAKE_CXX_FLAGS " -m32")
+	set(CMAKE_C_FLAGS " -m32")
+	set(CMAKE_ASM_FLAGS " -m32") 
+endif()
+
 # ÐÅÏ¢Êä³ö
 message(STATUS "CMAKE_BUILD_TYPE IS ${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_CXX_FLAGS IS ${CMAKE_CXX_FLAGS}")

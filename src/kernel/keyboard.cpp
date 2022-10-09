@@ -1,6 +1,6 @@
 #include "keyboard.h"
-void printf(const char* str);
-void printfHex(char* str, myos::uint8_t key);
+#include "print.h"
+using namespace myos::tools;
 namespace myos {
 	namespace kernel {
 		KeybordEventHandler::KeybordEventHandler() {}
@@ -13,6 +13,7 @@ namespace myos {
 
 
 		KeyboardDriver::KeyboardDriver(InterruptManager* manager, KeybordEventHandler* handler) :
+			// ¼üÅÌÖÐ¶Ï 0x21
 			InterruptHandler(0x01 + manager->HardwareInterruptOffset(), manager),
 			handler(handler),
 			dataport(0x60),
@@ -84,7 +85,7 @@ namespace myos {
 			case 0x45:break;
 			default:
 				if (key < 0x80) {
-					char* foo = (char*)"[KeyboardDriver::HandlerInterrupt] unknown interrupts 0x00";
+					char* foo = (char*)"[KeyboardDriver::HandlerInterrupt] unknown interrupts %lx\n";
 					printfHex(foo, key);
 				}
 			}

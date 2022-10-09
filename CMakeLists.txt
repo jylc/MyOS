@@ -9,7 +9,7 @@ project(MYOS LANGUAGES CXX ASM)
 message(STATUS ${MYOS_PROJECT_NAME})
 # ‘ –Ì≤‚ ‘
 enable_testing()
-set(test_flag ON)
+set(test_flag OFF)
 
 # …Ë÷√”Ô—‘∞Ê±æ
 set(CMAKE_C_STANDARD 11)
