@@ -6,6 +6,8 @@
 #include "types.h"
 #include "driver.h"
 #include "print.h"
+#include "pci.h"
+#include "vga.h"
 using namespace myos;
 using namespace myos::tools;
 using namespace myos::kernel;
@@ -54,7 +56,7 @@ public:
 		if (y < 0)y = 0;
 		else if (y >= 25)y = 24;
 
-		printf("pos:(%d,%d),move:(%d,%d)\n", x, y,nx,ny);
+		// printf("pos:(%d,%d),move:(%d,%d)\n", x, y,nx,ny);
 		VideoMemory[y * 80 + x] = ((VideoMemory[y * 80 + x] & 0xf000) >> 4) |
 			((VideoMemory[y * 80 + x] & 0x0f00) << 4) |
 			((VideoMemory[y * 80 + x] & 0x00ff));
@@ -75,8 +77,17 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	DriverManager driverManager;
 	driverManager.AddDriver(&keyboardDriver);
 	driverManager.AddDriver(&mouseDriver);
+	PeripheralComponentInterconnectController PCIController;
+	PCIController.SelectDrivers(&driverManager,&interrupt);
+	VideoGraphicsArray vga;
 	driverManager.DriverAll();
 
 	interrupt.Activate();
+	vga.SetMode(320, 200,8);
+	for (uint32_t y = 0; y < 200; y++) {
+		for (uint32_t x = 0; x < 320; x++) {
+			vga.PutPixel(x, y, 0x00, 0x00, 0xa8);
+		}
+	}
 	while (1);
 }

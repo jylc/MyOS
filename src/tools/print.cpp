@@ -51,7 +51,9 @@ namespace myos {
 			}
 		}
 
-		void printfHex(char* str, uint8_t key) {
+		
+
+		void printfHex(const char* str, uint8_t key) {
 			printf(str, key);
 		}
 	}
