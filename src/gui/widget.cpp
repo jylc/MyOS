@@ -7,7 +7,7 @@ namespace myos {
 			uint8_t r, uint8_t g, uint8_t b) :
 			KeybordEventHandler(),
 			parent(parent),
-			x(x), y(y),
+			x(x), y(y),w(w),h(h),
 			r(r), g(g), b(b),
 			Focusable(true) {}
 		Widget::~Widget(){}
@@ -113,7 +113,9 @@ namespace myos {
 
 			for (int32_t i = 0; i < numChildren; i++) {
 				if (children[i]->ContainsCordianate(nx - this->x, ny - this->y)) {
-					children[i]->OnMouseMove(x - this->x, y - this->y, nx - this->x, ny - this->y);
+					if (firstChild != i) {
+						children[i]->OnMouseMove(x - this->x, y - this->y, nx - this->x, ny - this->y);
+					}
 					break;
 				}
 			}

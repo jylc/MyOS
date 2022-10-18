@@ -24,7 +24,6 @@ namespace myos {
 		
 		};
 
-		//TODO 鼠标输出存在问题
 		class MouseDriver :public InterruptHandler,public Driver {
 		public:
 			MouseDriver(InterruptManager* manager,MouseEventHandler *handler);

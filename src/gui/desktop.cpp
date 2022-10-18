@@ -5,8 +5,7 @@ namespace myos {
 		Desktop::Desktop(int32_t w, int32_t h, uint8_t r, uint8_t g, uint8_t b) :
 			CompositeWidget(0, 0, 0, w, h, r, g, b),
 			MouseEventHandler() {
-			MouseX = 100;
-			MouseY = 100;
+			MouseX = w / 2, MouseY = h / 2;
 		}
 
 		Desktop::~Desktop() {
@@ -31,9 +30,9 @@ namespace myos {
 			CompositeWidget::OnMouseUp(MouseX, MouseY, button);
 		}
 
-		void Desktop::OnMouseMove(int32_t x, int32_t y) {
-			x /= 4;
-			y /= 4;
+		void Desktop::OnMouseMove(int8_t x, int8_t y) {
+			x /= 1;
+			y /= 1;
 
 			int32_t newMouseX = MouseX + x;
 			int32_t newMouseY = MouseY + y;

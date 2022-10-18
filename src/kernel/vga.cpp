@@ -80,8 +80,7 @@ namespace myos {
 		}
 
 		void VideoGraphicsArray::PutPixel(int32_t x, int32_t y, uint8_t r, uint8_t g, uint8_t b) {
-			uint8_t colorindex = GetColorIndex(r, g, b);
-			PutPixel(x, y, colorindex);
+			PutPixel(x, y, GetColorIndex(r, g, b));
 		}
 
 		void VideoGraphicsArray::PutPixel(int32_t x, int32_t y, uint8_t colorindex) {

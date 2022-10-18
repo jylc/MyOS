@@ -72,6 +72,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	printf("As we can!\n");
 	GlobalDescriptorTable gdt;
 	InterruptManager interrupt(0x20, &gdt);
+#define GRAPHICMODE
 #ifdef GRAPHICMODE
 	Desktop desktop(320, 200, 0x00, 0x00, 0xa8);
 #endif
@@ -98,7 +99,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	PCIController.SelectDrivers(&driverManager,&interrupt);
 	VideoGraphicsArray vga;
 	driverManager.DriverAll();
-	vga.SetMode(320, 200, 8);
+
 #ifdef GRAPHICMODE
 	vga.SetMode(320, 200, 8);
 	Window w1(&desktop, 10, 10, 20, 20, 0xa8, 0x00, 0x00);
