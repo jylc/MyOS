@@ -1,6 +1,5 @@
 # 设置子模块
 project(kernel)
-enable_language(CXX ASM)
 
 
 # 寻找CXX文件

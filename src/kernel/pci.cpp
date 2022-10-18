@@ -6,7 +6,6 @@ namespace myos {
 		PeripheralComponentInterconnectDriverDescriptor::~PeripheralComponentInterconnectDriverDescriptor() {}
 
 
-
 		PeripheralComponentInterconnectController::PeripheralComponentInterconnectController() :
 			commandport(0xcf8),// PCI_CONFIG_ADDRESS
 			dataport(0xcfc) //PCI_CONFIG_DATA        
@@ -92,18 +91,18 @@ namespace myos {
 				switch (dev.device_id)
 				{
 				case 0x2000:
-					tools::printf("AMD YES!\n");
+					tools::printf("AMD!\n");
 					break;
 				}
 				break;
 			case 0x8086:// INTEL
-				tools::printf("INTEL NO!\n");
+				tools::printf("INTEL!\n");
 				break;
 			case 0x1af4:
 				tools::printf("VirtIO\n");
 				break;
 			default:
-				tools::printf("UNKNOWN VENDOR ID\n");
+				//tools::printf("UNKNOWN\n");
 				break;
 			}
 			

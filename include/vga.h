@@ -6,14 +6,18 @@
 
 namespace myos {
 	namespace kernel {
+		// TODO 与视频中的实现效果不一致
 		class VideoGraphicsArray {
 		public:
 			VideoGraphicsArray();
 			~VideoGraphicsArray();
 			bool SupportsMode(uint32_t width, uint32_t height, uint32_t colordepth);
 			bool SetMode(uint32_t width, uint32_t height, uint32_t colordepth);
-			void PutPixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b);
-			void PutPixel(uint32_t x, uint32_t y, uint8_t colorindex);
+			void PutPixel(int32_t x, int32_t y, uint8_t r, uint8_t g, uint8_t b);
+			void PutPixel(int32_t x, int32_t y, uint8_t colorindex);
+
+
+			void FillRectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint8_t r, uint8_t g, uint8_t b);
 
 		private:
 			Port8Bit miscPort;
@@ -27,7 +31,6 @@ namespace myos {
 			Port8Bit attributeControllerReadPort;
 			Port8Bit attributeControllerWritePort;
 			Port8Bit attributeControllerResetPort;
-
 
 			void WriteRegisters(uint8_t* registers);
 
