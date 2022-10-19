@@ -3,6 +3,7 @@
 #include "port.h"
 #include "types.h"
 #include "gdt.h"
+#include "multitasking.h"
 
 namespace myos {
 	namespace kernel {
@@ -96,22 +97,18 @@ namespace myos {
 			Port8BitSlow picSlaveData;
 
 		public:
-			InterruptManager(uint16_t hardwareInterruptOffset,GlobalDescriptorTable* gtd);
-
+			InterruptManager(uint16_t hardwareInterruptOffset,GlobalDescriptorTable* gtd,TaskManager *taskManager);
 			~InterruptManager();
 
 		public:
 			void Activate();
-
 			void DeActivate();
-			
-			InterruptHandler* handlers[256];
-
 			static uint32_t HandleInterrupt(uint8_t interruptNumber, uint32_t esp);
-
 			uint32_t DoHandleInterrupt(uint8_t interruptNumber, uint32_t esp);
-
 			uint16_t HardwareInterruptOffset();
+
+			InterruptHandler* handlers[256];
+			TaskManager* taskManager;
 		};
 	}
 }

@@ -34,16 +34,17 @@ namespace myos {
 			interruptDescriptorTable[interruptNumber].handlerAddressLowBits = ((uint32_t)handler) & 0xffff;
 			interruptDescriptorTable[interruptNumber].handlerAdressighBits = ((uint32_t)handler >> 16) & 0xffff;
 			interruptDescriptorTable[interruptNumber].gdt_codeSegmentSelector = codeSegementSelectorOffset;
-			interruptDescriptorTable[interruptNumber].access = IDT_DESC_PRESENT | ((DescriptorPrivilegeLevel&3) << 5) | DescriptorType;
+			interruptDescriptorTable[interruptNumber].access = IDT_DESC_PRESENT | ((DescriptorPrivilegeLevel & 3) << 5) | DescriptorType;
 			interruptDescriptorTable[interruptNumber].reserved = 0;
 		}
 
-		InterruptManager::InterruptManager(uint16_t hardwareInterruptOffset, GlobalDescriptorTable* gdt) :
+		InterruptManager::InterruptManager(uint16_t hardwareInterruptOffset, GlobalDescriptorTable* gdt, TaskManager* taskManager) :
 			// 设置初始化端口
 			picMasterCommand(0x20), //主芯片端口
 			picMasterData(0x21),
 			picSlaveCommand(0xA0), //从芯片端口
-			picSlaveData(0xA1) {
+			picSlaveData(0xA1),
+			taskManager(taskManager) {
 			uint16_t codeSegment = (gdt->CodeSegmentSelector()) << 3;
 			this->hardwareInterruptOffset = hardwareInterruptOffset;
 
@@ -103,7 +104,7 @@ namespace myos {
 
 
 			// 11 表示初始化命令开始，是ICW1 命令字
-			picMasterCommand.write(0x11); 
+			picMasterCommand.write(0x11);
 			picSlaveCommand.write(0x11);
 
 			// IRQ0 对应中断向量 0x20
@@ -125,7 +126,7 @@ namespace myos {
 			idt.size = 256 * sizeof(GateDescriptor) - 1;
 			idt.base = (uint32_t)interruptDescriptorTable;
 			// 将 m 加载到 IDTR
-			asm volatile("lidt %0": :"m" (idt));
+			asm volatile("lidt %0": : "m" (idt));
 		}
 
 		InterruptManager::~InterruptManager() {}
@@ -157,9 +158,14 @@ namespace myos {
 			// 根据中断向量号寻找中断处理
 			if (handlers[interruptNumber] != 0) {
 				esp = handlers[interruptNumber]->HandlerInterrupt(esp);
-			}else if (interruptNumber != hardwareInterruptOffset) {
+			}
+			else if (interruptNumber != hardwareInterruptOffset) {
 				char* foo = (char*)"[InterruptManager::DoHandleInterrupt] unknown interrupts %lx\n";
-				myos::tools::printfHex(foo,interruptNumber);
+				myos::tools::printfHex(foo, interruptNumber);
+			}
+
+			if (interruptNumber == hardwareInterruptOffset) { //根据时钟中断切换任务
+				esp = (uint32_t)taskManager->Schedule((CPUState*)esp);
 			}
 
 			if (hardwareInterruptOffset <= interruptNumber && interruptNumber < hardwareInterruptOffset + 16) {
