@@ -24,7 +24,7 @@ namespace myos {
 
 		protected:
 			Widget* parent;
-			int32_t x, y, w, h;
+			uint32_t x, y, w, h;
 			uint8_t r, g, b;
 			bool Focusable;
 		};

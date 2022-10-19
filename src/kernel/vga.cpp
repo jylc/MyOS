@@ -99,17 +99,17 @@ namespace myos {
 			case 1 << 2: return (uint8_t*)0xa0000;
 			case 2 << 2: return (uint8_t*)0xb0000;
 			case 3 << 2: return (uint8_t*)0xb8000;
-			default:return (uint8_t*)0xA0000;
+			default:return (uint8_t*)0xb8000;
 			}
 		}
 
 		uint8_t VideoGraphicsArray::GetColorIndex(uint8_t r, uint8_t g, uint8_t b) {
-			if (r == 0x00, g == 0x00, b == 0x00)return 0x00; //black
-			if (r == 0x00, g == 0x00, b == 0xa8)return 0x01; //blue
-			if (r == 0x00, g == 0xa8, b == 0x00)return 0x02; //green
-			if (r == 0xa8, g == 0x00, b == 0xa8)return 0x04; //red
-			if (r == 0xff, g == 0xff, b == 0xff)return 0x3f; //white
-			return 0x00;
+			if (r == 0x00, g == 0x00, b == 0x00)return 0x00; 
+			if (r == 0x00, g == 0x00, b == 0xa8)return 0x11; 
+			if (r == 0x00, g == 0xa8, b == 0x00)return 0x21; 
+			if (r == 0xa8, g == 0x00, b == 0xa8)return 0x41; 
+			if (r == 0xff, g == 0xff, b == 0xff)return 0x3f; 
+			return 0x01;
 		}
 
 		void VideoGraphicsArray::FillRectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint8_t r, uint8_t g, uint8_t b) {

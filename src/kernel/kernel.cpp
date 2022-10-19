@@ -102,9 +102,9 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 
 #ifdef GRAPHICMODE
 	vga.SetMode(320, 200, 8);
-	Window w1(&desktop, 10, 10, 20, 20, 0xa8, 0x00, 0x00);
+	Window w1(&desktop, 10, 10, 20, 20, 0x00, 0xa8, 0x00);
 	desktop.AddChild(&w1);
-	Window w2(&desktop, 40, 15, 30, 30, 0x00, 0xa8, 0x00);
+	Window w2(&desktop, 40, 15, 30, 30, 0xff, 0xff, 0xff);
 	desktop.AddChild(&w2);
 #endif // GRAPHICMODE
 
