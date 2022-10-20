@@ -40,21 +40,46 @@ namespace myos {
 					y++;
 				}
 				if (y >= 25) {
-					for (y = 0; y < 25; y++) {
-						for (x = 0; x < 80; x++) {
-							VideoMemory[x * y] = (VideoMemory[x * y] & 0xFF00) | ' ';
-						}
-					}
+					/*clear_screen();
 					x = 0;
-					y = 0;
+					y = 0;*/
+					scroll(x, y);
 				}
 			}
 		}
 
-		
 
 		void printfHex(const char* str, uint8_t key) {
 			printf(str, key);
+		}
+
+		void clear_screen() {
+			uint8_t attribyte_byte = (0 << 4) | (15 & 0x0f);
+			uint16_t blank = 0x20 | (attribyte_byte << 8);
+			uint16_t* VideoMemory = (uint16_t*)0xb8000;
+			for (uint8_t y = 0; y < 25; y++) {
+				for (uint8_t x = 0; x < 80; x++) {
+					VideoMemory[80 * y + x] = blank;
+				}
+			}
+		}
+
+		void scroll(uint8_t&x, uint8_t&y) {
+			uint8_t attribyte_byte = (0 << 4) | (15 & 0x0f);
+			uint16_t blank = 0x20 | (attribyte_byte << 8);
+			uint16_t* VideoMemory = (uint16_t*)0xb8000;
+			if (y >= 25) {
+				for (uint8_t y_t = 0; y_t < 24; y_t++) {
+					for (uint8_t x_t = 0; x_t < 80; x_t++) {
+						VideoMemory[80 * y_t + x_t] = VideoMemory[80 * (y_t +1) + x_t];
+					}
+				}
+
+				for (uint8_t x_t = 0; x_t < 80; x_t++) {
+					VideoMemory[80 * 25 + x_t] = blank;
+				}
+				y--;
+			}
 		}
 	}
 }

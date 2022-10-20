@@ -92,12 +92,12 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	taskManager.AddTask(&task2);
 
 
-	InterruptManager interrupt(0x20, &gdt,&taskManager);
+	InterruptManager interrupt(0x20, &gdt, &taskManager);
 #ifdef GRAPHICMODE
 	Desktop desktop(320, 200, 0x00, 0x00, 0xa8);
 #endif
 	DriverManager driverManager;
-	
+
 
 #ifdef GRAPHICMODE
 	KeyboardDriver keyboardDriver(&interrupt, &desktop);
@@ -116,7 +116,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	driverManager.AddDriver(&mouseDriver);
 
 	PeripheralComponentInterconnectController PCIController;
-	PCIController.SelectDrivers(&driverManager,&interrupt);
+	PCIController.SelectDrivers(&driverManager, &interrupt);
 	VideoGraphicsArray vga;
 	driverManager.DriverAll();
 

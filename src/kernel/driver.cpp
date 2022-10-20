@@ -19,7 +19,7 @@ namespace myos {
 		}
 
 		void DriverManager::DriverAll() {
-			for (uint8_t i = 0; i < numDrivers; i++) {
+			for (uint16_t i = 0; i < numDrivers; i++) {
 				drivers[i]->Activate();
 			}
 		}

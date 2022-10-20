@@ -1,5 +1,7 @@
 #include "pci.h"
 #include "print.h"
+#include "net/amd_am79c973.h"
+#include "memorymanagement.h"
 namespace myos {
 	namespace kernel {
 		PeripheralComponentInterconnectDriverDescriptor::PeripheralComponentInterconnectDriverDescriptor() {}
@@ -53,7 +55,7 @@ namespace myos {
 						PeripheralComponentInterconnectDriverDescriptor dev = GetDeviceDescriptor((uint8_t)bus, device, function);
 						if (dev.vendor_id == 0 || dev.vendor_id == 0xffff) continue;
 
-						tools::printf("PCI BUS:");
+						/*tools::printf("PCI BUS:");
 						tools::printf("%lX", bus & 0xff);
 
 						tools::printf(", DEVICE :");
@@ -67,31 +69,43 @@ namespace myos {
 
 						tools::printf(", DEVICE :");
 						tools::printf("%X", dev.device_id);
-						tools::printf("\n");
+						tools::printf("\n");*/
 
 						for (uint8_t barNum = 0; barNum < 6; barNum++) {
 							// 从配置空间获取基址寄存器
 							BaseAddressRegister bar = GetBaseAddressRegister(bus, device, function, barNum);
 							if (bar.address && (bar.type == InputOutput)) {// I/O设备
 								dev.portBase=(uint32_t)bar.address;// portBase是4字节的地址，指向寄存器
-								Driver* driver = GetDriver(dev, interruptManager);
-								if (driver != nullptr) {
-									driverManager->AddDriver(driver);
-								}
 							}
+						}
+
+						Driver* driver = GetDriver(dev, interruptManager);
+						if (driver != nullptr) {
+							driverManager->AddDriver(driver);
 						}
 					}
 				}
 			} 
 		}
 		Driver* PeripheralComponentInterconnectController::GetDriver(PeripheralComponentInterconnectDriverDescriptor dev, InterruptManager* manager){
+			Driver* driver = nullptr;
 			switch (dev.vendor_id)
 			{
 			case 0x1022:// AMD
 				switch (dev.device_id)
 				{
-				case 0x2000:
-					tools::printf("AMD!\n");
+				case 0x2000:// am79c973
+					driver = (net::AmdAm78c973*)MemoryManager::activeMemoryManager->malloc(sizeof(net::AmdAm78c973));
+					if (driver != nullptr) {
+						// 指定在driver所在的位置分配内存
+						new (driver)net::AmdAm78c973(&dev, manager);
+						tools::printf("AMD am79c973 instantiation successful\n");
+					}
+					else {
+						tools::printf("AMD am79c973 instantiation failed\n");
+					}
+					tools::printf("AMD AM79c973!\n");
+					return driver;
 					break;
 				}
 				break;
@@ -111,7 +125,7 @@ namespace myos {
 			case 0x03:
 				switch (dev.subclass_id) {
 				case 0x00:// VGA
-					tools::printf("VGA");
+					tools::printf("VGA\n");
 					break;
 				}
 				break;
