@@ -2,6 +2,24 @@
 #include "print.h"
 namespace myos {
 	namespace net {
+
+		RawDataHandler::RawDataHandler(AmdAm78c973*backend):
+		backend(backend) {
+			backend->SetHandler(this);
+		}
+
+		RawDataHandler::~RawDataHandler() {
+			backend->SetHandler(nullptr);
+		}
+
+		bool RawDataHandler::OnRawDataReceived(uint8_t* buffer, uint32_t size) {
+			return false;
+		}
+
+		void RawDataHandler::Send(uint8_t* buffer, uint32_t size) {
+			backend->Send(buffer, size);
+		}
+
 		AmdAm78c973::AmdAm78c973(kernel::PeripheralComponentInterconnectDriverDescriptor* dev, kernel::InterruptManager* interrupts) :
 			Driver(),
 			InterruptHandler(dev->interrupt + interrupts->HardwareInterruptOffset(), interrupts),
@@ -13,6 +31,7 @@ namespace myos {
 			resetPort(dev->portBase + 0x14),
 			busConstolRegisterDataPort(dev->portBase + 0x16)
 		{
+			handler = nullptr;
 			uint8_t interruptNo = dev->interrupt + interrupts->HardwareInterruptOffset();
 			tools::printf("amd_am79c973 interrupt:%x\n", interruptNo);
 			currentSendBuffer = 0;
@@ -97,7 +116,7 @@ namespace myos {
 			else if ((tmp & 0x2000) == 0x2000) tools::printf("AMD AM79C973 Collision Error\n");
 			else if ((tmp & 0x1000) == 0x1000) tools::printf("AMD AM79C973 Missed Frame\n");
 			else if ((tmp & 0x0800) == 0x0800) tools::printf("AMD AM79C973 Memory Error\n");
-			else if ((tmp & 0x0400) == 0x0400) tools::printf("AMD AM79C973 Receive Interrupt\n");
+			else if ((tmp & 0x0400) == 0x0400) Receive();
 			else if ((tmp & 0x0200) == 0x0200) tools::printf("AMD AM79C973 Transmit Interrupt\n");
 
 			registerAddressPort.write(0);
@@ -106,5 +125,56 @@ namespace myos {
 			if ((tmp & 0x0100) == 0x0100) tools::printf("AMD AM79C973 INIT DONE\n");
 			return esp;
 		}
+
+		void AmdAm78c973::Send(uint8_t* buffer, int size) {
+			int sendDesc = currentSendBuffer;
+			currentSendBuffer = (currentSendBuffer + 1) % 8;
+			// 1518 ÒÔÌ«ÍøµÄÖ¡
+			if (size > 1518) {
+				size = 1518;
+			}
+			for (uint8_t* src = buffer + size - 1, *dst = (uint8_t*)(sendBufferDesc[sendDesc].address + size - 1); src >= buffer; src--, dst--) {
+				*dst = *src;
+			}
+
+			sendBufferDesc[sendDesc].avail = 0;
+			sendBufferDesc[sendDesc].flags = 0x8300f000|((uint16_t)((-size)&0xfff));
+			sendBufferDesc[sendDesc].flags2 = 0;
+
+			registerAddressPort.write(0);
+			registerDataPort.write(0x48);
+		}
+		void AmdAm78c973::Receive() {
+			for (; (recvBufferDesc[currentRecvBuffer].flags & 0x80000000) == 0; currentRecvBuffer == (currentRecvBuffer + 1) % 8) {
+				if (!(recvBufferDesc[currentRecvBuffer].flags & 0x40000000)&&(recvBufferDesc[currentRecvBuffer].flags&0x30000000)==0x30000000) {
+					uint32_t size = recvBufferDesc[currentRecvBuffer].flags & 0xfff;
+					if (size > 64) {
+						size -= 4;
+					}
+
+					uint8_t* buffer = (uint8_t*)(recvBufferDesc[currentRecvBuffer].address);
+					/*for (int i = 0; i < size; i++) {
+						tools::printf("%x ", buffer[i]);
+					}*/
+					if (handler != nullptr) {
+						if (handler->OnRawDataReceived(buffer, size)) {
+							Send(buffer, size);
+						}
+					}
+				}
+
+				recvBufferDesc[currentRecvBuffer].flags2 = 0;
+				recvBufferDesc[currentRecvBuffer].flags = 0x8000f7ff;
+			}
+		}
+
+		void AmdAm78c973::SetHandler(RawDataHandler* handler) {
+			this->handler = handler;
+		}
+
+		uint64_t AmdAm78c973::GetMacAddress() {
+			return initBlock.physicalAddress;
+		}
+
 	}
 }

@@ -2,7 +2,7 @@
 namespace myos {
 	namespace tools {
 		void printf(const char* _fmt, ...) {
-			va_list va;
+			va_list_ va;
 			va_start(va, _fmt);
 			const int ret = _vsnprintf(buf, BUF_SIZE, _fmt, va);
 			va_end(va);
@@ -11,7 +11,7 @@ namespace myos {
 		}
 
 		char* printf_test(const char* _fmt, ...) {
-			va_list va;
+			va_list_ va;
 			va_start(va, _fmt);
 			const int ret = _vsnprintf(buf, BUF_SIZE, _fmt, va);
 			va_end(va);

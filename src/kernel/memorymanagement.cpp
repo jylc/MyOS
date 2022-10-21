@@ -3,20 +3,23 @@
 namespace myos {
 	namespace kernel {
 		MemoryManager* MemoryManager::activeMemoryManager = 0;
+		
+		// 该构造函数创建了一个初始的内存块，之后的内存块从该内存块中切割出去
 		MemoryManager::MemoryManager(size_t start, size_t size) {
 			activeMemoryManager = this;
 
+			// 输入的大小小于MemoryChunk的大小，说明内存已经不足了
 			if (size < sizeof(MemoryChunk)) {
 				first = 0;
 			}
 			else
 			{
-				// 为什么用start做为地址
+				// start是接下来所有内存分配的起始地址
 				first = (MemoryChunk*)start;
 				first->allocated = false;
 				first->prev = 0;
 				first->next = 0;
-				// 不包含头部大小（sizeof(MemoryChunk)）
+				// 该内存块保存的大小不包含头部大小（sizeof(MemoryChunk)），size是包括了头部大小的整体尺寸
 				first->size = size - sizeof(MemoryChunk);
 			}
 		}

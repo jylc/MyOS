@@ -1,6 +1,6 @@
 #include "lib/stdarg.h"
 #include "lib/stdio.h"
-
+using namespace myos;
 static size_t _ntoa_long(out_func_type out, char* buffer, size_t idx,
 	size_t maxlen, unsigned long value, bool negative,
 	unsigned long base, unsigned int prec,
@@ -124,7 +124,7 @@ static inline unsigned int _strnlen_s(const char* str, size_t maxsize) {
 
 // internal vsnprintf
 int _vsnprintf(char* buffer, const size_t maxlen, const char* format,
-	va_list va) {
+	va_list_ va) {
 	out_func_type out_func = _out_buffer;
 	size_t idx = 0U;
 	size_t flags, width, n, precision;

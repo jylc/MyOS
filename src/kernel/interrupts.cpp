@@ -157,7 +157,6 @@ namespace myos {
 		uint32_t InterruptManager::DoHandleInterrupt(uint8_t interruptNumber, uint32_t esp) {
 			// 根据中断向量号寻找中断处理
 			if (handlers[interruptNumber] != 0) {
-				myos::tools::printf("[InterruptManager::DoHandleInterrupt] interruptNumber:%x\n", interruptNumber);
 				esp = handlers[interruptNumber]->HandlerInterrupt(esp);
 			}
 			else if (interruptNumber != hardwareInterruptOffset) {

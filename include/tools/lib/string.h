@@ -1,9 +1,8 @@
 #ifndef MYOS_STRING_H
 #define MYOS_STRING_H
 #include "../../common/types.h"
-using namespace myos;
-void* memset(void* dest, int val, size_t len);
-void bzero(void* buf, uint32_t len);
+void* memset(void* dest, int val, myos::size_t len);
+void bzero(void* buf, myos::uint32_t len);
 
 
 

@@ -5,16 +5,19 @@
 
 namespace myos {
 	namespace kernel {
+
+		// sizeof(MemoryChunk)==16B，在内存中结构体会字节对齐bool占4B
 		struct MemoryChunk {
-			MemoryChunk* next;
-			MemoryChunk* prev;
-			bool allocated;
-			size_t size;
+			// 32bit os 指针4Bytes
+			MemoryChunk* next; //4B
+			MemoryChunk* prev; //4B
+			bool allocated;    //1B
+			size_t size;	   //4B
 		};
 
 		class MemoryManager {
 		public:
-			MemoryManager(size_t start,size_t size);
+			MemoryManager(size_t start, size_t size);
 			~MemoryManager();
 
 			void* malloc(size_t size);

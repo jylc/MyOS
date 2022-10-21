@@ -1,5 +1,6 @@
 #include "lib/string.h"
-
+#include "common/types.h"
+using namespace myos;
 void* memset(void* dest, int val, size_t len) {
 	uint8_t* ptr = (uint8_t*)dest;
 	while (len-- > 0)

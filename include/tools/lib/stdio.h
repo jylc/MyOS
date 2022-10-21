@@ -1,8 +1,6 @@
 #ifndef MYOS_STDIO_H
 #define MYOS_STDIO_H
 #include "../../common/types.h"
-using namespace myos;
-
 #define PRINTF_NTOA_BUFFER_SIZE 32U
 
 // internal flag definitions
@@ -38,11 +36,11 @@ static inline bool _is_digit(char ch) {
     return (ch >= '0') && (ch <= '9');
 }
 
-static  uint32_t _atoi(const char** str) {
-    uint32_t num = 0U;
+static  myos::uint32_t _atoi(const char** str) {
+    myos::uint32_t num = 0U;
     while (_is_digit(**str))
     {
-        num = num * 10U + (uint32_t)(*((*str)++) - '0');
+        num = num * 10U + (myos::uint32_t)(*((*str)++) - '0');
     }
     return num;
 }
@@ -69,7 +67,7 @@ static myos::size_t _out_rev(out_func_type out, char* buffer, myos::size_t idx,
 static inline unsigned int _strnlen_s(const char* str, myos::size_t maxsize);
 
 int _vsnprintf(char* buffer, const myos::size_t maxlen, const char* format,
-    va_list va);
+    va_list_ va);
 
 #endif // !MYOS_STDIO_H
 

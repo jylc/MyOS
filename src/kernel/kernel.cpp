@@ -10,6 +10,9 @@
 #include "vga.h"
 #include "gui/desktop.h"
 #include "gui/window.h"
+#include "memorymanagement.h"
+#include "net/amd_am79c973.h"
+#include "net/etherframe.h"
 using namespace myos;
 using namespace myos::tools;
 using namespace myos::kernel;
@@ -84,12 +87,15 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	printf("Hello World!\n");
 	printf("As we can!\n");
 	GlobalDescriptorTable gdt;
-
+	// 一块空闲的内存地址
+	size_t heap = 10 * 1024 * 1024;
+	uint32_t* memupper = (uint32_t*)((size_t)multiboot_structure + 8);
+	MemoryManager memoryManager(heap, (*memupper) * 1024 - heap - 10 * 1024);
 	TaskManager taskManager;
 	Task task1(&gdt, taskA);
 	Task task2(&gdt, taskB);
-	taskManager.AddTask(&task1);
-	taskManager.AddTask(&task2);
+	//taskManager.AddTask(&task1);
+	//taskManager.AddTask(&task2);
 
 
 	InterruptManager interrupt(0x20, &gdt, &taskManager);
@@ -128,6 +134,9 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	desktop.AddChild(&w2);
 #endif // GRAPHICMODE
 
+	net::AmdAm78c973* eth0 = (net::AmdAm78c973*)(driverManager.drivers[2]);
+	net::EtherFrameProvider etherframe(eth0);
+	etherframe.Send(0xffffffffffff, 0x608, (uint8_t*)"hello", 6);
 	interrupt.Activate();
 	while (1) {
 #ifdef GRAPHICMODE

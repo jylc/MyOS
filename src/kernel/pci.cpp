@@ -95,6 +95,7 @@ namespace myos {
 				switch (dev.device_id)
 				{
 				case 0x2000:// am79c973
+					tools::printf("AMD AM79c973!\n");
 					driver = (net::AmdAm78c973*)MemoryManager::activeMemoryManager->malloc(sizeof(net::AmdAm78c973));
 					if (driver != nullptr) {
 						// 指定在driver所在的位置分配内存
@@ -104,7 +105,6 @@ namespace myos {
 					else {
 						tools::printf("AMD am79c973 instantiation failed\n");
 					}
-					tools::printf("AMD AM79c973!\n");
 					return driver;
 					break;
 				}
