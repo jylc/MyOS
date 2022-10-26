@@ -80,7 +80,7 @@ namespace myos {
 						}
 
 						Driver* driver = GetDriver(dev, interruptManager);
-						if (driver != nullptr) {
+						if (driver != 0) {
 							driverManager->AddDriver(driver);
 						}
 					}
@@ -88,7 +88,10 @@ namespace myos {
 			} 
 		}
 		Driver* PeripheralComponentInterconnectController::GetDriver(PeripheralComponentInterconnectDriverDescriptor dev, InterruptManager* manager){
-			Driver* driver = nullptr;
+			Driver* driver = 0;
+			if (dev.interrupt == 0x0d) {
+				tools::printf("vendor_id:%x,device_id:%x\n", dev.vendor_id, dev.device_id);
+			}
 			switch (dev.vendor_id)
 			{
 			case 0x1022:// AMD
@@ -97,7 +100,7 @@ namespace myos {
 				case 0x2000:// am79c973
 					tools::printf("AMD AM79c973!\n");
 					driver = (net::AmdAm78c973*)MemoryManager::activeMemoryManager->malloc(sizeof(net::AmdAm78c973));
-					if (driver != nullptr) {
+					if (driver != 0) {
 						// 指定在driver所在的位置分配内存
 						new (driver)net::AmdAm78c973(&dev, manager);
 						tools::printf("AMD am79c973 instantiation successful\n");
@@ -110,7 +113,7 @@ namespace myos {
 				}
 				break;
 			case 0x8086:// INTEL
-				tools::printf("INTEL!\n");
+				//tools::printf("INTEL!\n");
 				break;
 			case 0x1af4:
 				tools::printf("VirtIO\n");
@@ -159,7 +162,7 @@ namespace myos {
 				}
 			}
 			else {
-				result.address = (uint8_t*)(bar_value & ~3);
+				result.address = (uint8_t*)(bar_value & ~0x3);
 				result.prefetchable = false;
 			}
 			return result;

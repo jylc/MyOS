@@ -3,8 +3,8 @@
 namespace myos {
 	namespace net {
 
-		RawDataHandler::RawDataHandler(AmdAm78c973*backend):
-		backend(backend) {
+		RawDataHandler::RawDataHandler(AmdAm78c973* backend) {
+			this->backend = backend;
 			backend->SetHandler(this);
 		}
 
@@ -31,6 +31,7 @@ namespace myos {
 			resetPort(dev->portBase + 0x14),
 			busConstolRegisterDataPort(dev->portBase + 0x16)
 		{
+			tools::printf("AmdAm78c973 init success\n");
 			handler = nullptr;
 			uint8_t interruptNo = dev->interrupt + interrupts->HardwareInterruptOffset();
 			tools::printf("amd_am79c973 interrupt:%x\n", interruptNo);
@@ -109,9 +110,10 @@ namespace myos {
 
 		uint32_t AmdAm78c973::HandlerInterrupt(uint32_t esp) {
 			tools::printf("INTERRUPT FROM AMD AM79C973\n");
+
 			registerAddressPort.write(0);
 			uint32_t tmp = registerDataPort.read();
-
+			tools::printf("[HandlerInterrupt] %x\n",tmp);
 			if ((tmp & 0x8000) == 0x8000) tools::printf("AMD AM79C973 ERROR\n");
 			else if ((tmp & 0x2000) == 0x2000) tools::printf("AMD AM79C973 Collision Error\n");
 			else if ((tmp & 0x1000) == 0x1000) tools::printf("AMD AM79C973 Missed Frame\n");
@@ -133,29 +135,37 @@ namespace myos {
 			if (size > 1518) {
 				size = 1518;
 			}
-			for (uint8_t* src = buffer + size - 1, *dst = (uint8_t*)(sendBufferDesc[sendDesc].address + size - 1); src >= buffer; src--, dst--) {
+			for (uint8_t* src = buffer + size - 1,
+				*dst = (uint8_t*)(sendBufferDesc[sendDesc].address + size - 1); src >= buffer; src--, dst--) {
 				*dst = *src;
 			}
+			tools::printf("Sending: ");
+			for (int i = 0; i < size; i++) {
+				tools::printf("%x ", buffer[i]);
+			}
+			tools::printf("\n");
 
 			sendBufferDesc[sendDesc].avail = 0;
-			sendBufferDesc[sendDesc].flags = 0x8300f000|((uint16_t)((-size)&0xfff));
+			sendBufferDesc[sendDesc].flags = 0x8300f000 | ((uint16_t)((-size) & 0xfff));
 			sendBufferDesc[sendDesc].flags2 = 0;
 
 			registerAddressPort.write(0);
 			registerDataPort.write(0x48);
 		}
+
 		void AmdAm78c973::Receive() {
+			tools::printf("AmdAm78c973 RECEIVED\n");
 			for (; (recvBufferDesc[currentRecvBuffer].flags & 0x80000000) == 0; currentRecvBuffer == (currentRecvBuffer + 1) % 8) {
-				if (!(recvBufferDesc[currentRecvBuffer].flags & 0x40000000)&&(recvBufferDesc[currentRecvBuffer].flags&0x30000000)==0x30000000) {
+				if (!(recvBufferDesc[currentRecvBuffer].flags & 0x40000000) && (recvBufferDesc[currentRecvBuffer].flags & 0x30000000) == 0x30000000) {
 					uint32_t size = recvBufferDesc[currentRecvBuffer].flags & 0xfff;
 					if (size > 64) {
 						size -= 4;
 					}
 
 					uint8_t* buffer = (uint8_t*)(recvBufferDesc[currentRecvBuffer].address);
-					/*for (int i = 0; i < size; i++) {
+					for (int i = 0; i < size; i++) {
 						tools::printf("%x ", buffer[i]);
-					}*/
+					}
 					if (handler != nullptr) {
 						if (handler->OnRawDataReceived(buffer, size)) {
 							Send(buffer, size);
@@ -176,5 +186,36 @@ namespace myos {
 			return initBlock.physicalAddress;
 		}
 
+		uint32_t AmdAm78c973::GetIPAddress() {
+			return initBlock.logicalAddress;
+		}
+
+		void AmdAm78c973::SetIPAddress(uint32_t ip_be) {
+			tools::printf("[AmdAm78c973::SetIPAddress] start:address1 %x,address2 %x,value %x\n",
+				&initBlock.logicalAddress, ip_be, initBlock.logicalAddress);
+			uint64_t tmp = ip_be;
+			char* p = (char*)&initBlock.logicalAddress;
+			tools::printf("[logicalAddress] :");
+			for (uint8_t i = 0; i < 8; i++) {
+				tools::printf("%#x ", *(p + i));
+			}
+			p = (char*)&ip_be;
+			tools::printf("\n[ip_be] :");
+			for (uint8_t i = 0; i < 4; i++) {
+				tools::printf("%#x ", *(p + i));
+			}
+			tools::printf("\n");
+
+			p = (char*)&tmp;
+			tools::printf("\n[tmp] :");
+			for (uint8_t i = 0; i < 8; i++) {
+				tools::printf("%#x ", *(p + i));
+			}
+			tools::printf("\n");
+
+			// 直接ip_be赋值会出问题，不知道什么原因
+			initBlock.logicalAddress = uint64_t(ip_be);
+			tools::printf("[AmdAm78c973::SetIPAddress] end\n");
+		}
 	}
 }

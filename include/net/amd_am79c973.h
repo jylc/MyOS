@@ -13,7 +13,7 @@ namespace myos {
 			RawDataHandler(AmdAm78c973* backend);
 			~RawDataHandler();
 
-			bool OnRawDataReceived(uint8_t* buffer, uint32_t size);
+			virtual bool OnRawDataReceived(uint8_t* buffer, uint32_t size);
 			void Send(uint8_t* buffer, uint32_t size);
 		protected:
 			AmdAm78c973* backend;
@@ -35,6 +35,9 @@ namespace myos {
 			void SetHandler(RawDataHandler* rawDataHandler);
 
 			uint64_t GetMacAddress();
+			uint32_t GetIPAddress();
+
+			void SetIPAddress(uint32_t address);
 		private:
 			struct InitializationBlock {
 				uint16_t mode;
@@ -47,7 +50,7 @@ namespace myos {
 				uint64_t logicalAddress;
 				uint32_t recvBufferDescAddress;
 				uint32_t sendBufferDescAddress;
-			}__attribute__((packed));
+			} __attribute__((packed));
 
 
 			struct BufferDescriptor
@@ -70,7 +73,7 @@ namespace myos {
 			BufferDescriptor* sendBufferDesc;
 			// TODO ÎªÊ²Ã´ÊÇ2048 + 15
 			uint8_t sendBufferDescMemory[2048 + 15];
-			uint8_t sendBuffers[8][2049 + 15];
+			uint8_t sendBuffers[8][2048 + 15];
 			uint8_t currentSendBuffer;
 
 			BufferDescriptor* recvBufferDesc;

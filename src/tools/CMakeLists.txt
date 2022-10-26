@@ -9,6 +9,8 @@ aux_source_directory(${tools_SOURCE_DIR}/lib tools_src_lib)
 add_library(${PROJECT_NAME} OBJECT ${tools_src} ${tools_src_lib})
 # я╟урм╥нд╪Ч
 target_include_tools_header_files(${PROJECT_NAME})
+target_include_header_files(${PROJECT_NAME})
+
 add_library(test_tools_lib STATIC ${tools_src} ${tools_src_lib})
 target_include_header_files(test_tools_lib)
 target_include_tools_header_files(test_tools_lib)

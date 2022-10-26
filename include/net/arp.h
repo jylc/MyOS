@@ -6,7 +6,7 @@ namespace myos {
 	namespace net {
 		struct AddressResolutionProtocolMessage {
 			uint16_t hardwareType;
-			uint16_t protocal;
+			uint16_t protocol;
 			uint8_t hardwareAddresSize;
 			uint8_t protocolAddressSize;
 			uint16_t command;
@@ -27,7 +27,7 @@ namespace myos {
 			void RequestMACAddress(uint32_t IP_BE);
 			uint64_t Resolve(uint32_t IP_BE);
 			uint64_t GetMACFromCache(uint64_t IP_BE);
-
+			void BroadcastMACAddress(uint32_t IP_BE);
 
 		private:
 			uint32_t IPcache[128];

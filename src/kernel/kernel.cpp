@@ -13,6 +13,8 @@
 #include "memorymanagement.h"
 #include "net/amd_am79c973.h"
 #include "net/etherframe.h"
+#include "net/arp.h"
+#include "net/ipv4.h"
 using namespace myos;
 using namespace myos::tools;
 using namespace myos::kernel;
@@ -91,6 +93,13 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	size_t heap = 10 * 1024 * 1024;
 	uint32_t* memupper = (uint32_t*)((size_t)multiboot_structure + 8);
 	MemoryManager memoryManager(heap, (*memupper) * 1024 - heap - 10 * 1024);
+
+	printf("\n heap: %x\n",heap);
+
+	void* allocated = memoryManager.malloc(1024);
+	printf("\n allocated: %x\n",allocated);
+	
+
 	TaskManager taskManager;
 	Task task1(&gdt, taskA);
 	Task task2(&gdt, taskB);
@@ -134,10 +143,34 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	desktop.AddChild(&w2);
 #endif // GRAPHICMODE
 
+	uint8_t ip1 = 192, ip2 = 168, ip3 = 12, ip4 = 148;
+	uint32_t ip_be = ((uint32_t)ip4 << 24) |
+		((uint32_t)ip3 << 16) |
+		((uint32_t)ip2 << 8) |
+		(uint32_t)ip1;
+
+	uint8_t gip1 = 192, gip2 = 168, gip3 = 12, gip4 = 1;
+	uint32_t gip_be = ((uint32_t)gip4 << 24 )|
+		((uint32_t)gip3 << 16) |
+		((uint32_t)gip2 << 8) |
+		(uint32_t)gip1;
 	net::AmdAm78c973* eth0 = (net::AmdAm78c973*)(driverManager.drivers[2]);
+
+	eth0->SetIPAddress(ip_be);
 	net::EtherFrameProvider etherframe(eth0);
-	etherframe.Send(0xffffffffffff, 0x608, (uint8_t*)"hello", 6);
+
+	net::AddressResolutionProtocol arp(&etherframe);
+
+	uint8_t subnet1 = 255, subnet2 = 255, subnet3 = 255, subnet4 = 0;
+	uint32_t subnet_be = ((uint32_t)subnet4 << 24) |
+		((uint32_t)subnet3 << 16) |
+		((uint32_t)subnet2 << 8) |
+		(uint32_t)subnet1;
+	net::InternetProtocolProvider ipv4(&etherframe, &arp, gip_be, subnet_be);
+
 	interrupt.Activate();
+	ipv4.Send(gip_be, 0x0008, (uint8_t*)"Hello Network", 13);
+	//arp.Resolve(gip_be);
 	while (1) {
 #ifdef GRAPHICMODE
 		desktop.Draw(&vga);

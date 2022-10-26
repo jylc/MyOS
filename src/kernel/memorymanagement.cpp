@@ -34,26 +34,23 @@ namespace myos {
 		void* MemoryManager::malloc(size_t size) {
 			MemoryChunk* result = 0;
 			for (MemoryChunk* chunk = first; chunk != 0 && result == 0; chunk = chunk->next) {
-				// chunk的大小大于size且chunk没有被分配，就选取该chunk
 				if (chunk->size > size && !chunk->allocated) {
 					result = chunk;
 				}
 			}
 
-			// 分配失败
-			if (result == 0)return 0;
-			// 分配过大重新分配
+			if (result == 0) return 0;
+
 			if (result->size >= size + sizeof(MemoryChunk) + 1) {
-				// TODO 为什么会这么做
-				MemoryChunk* tmp = (MemoryChunk*)((size_t)result + sizeof(MemoryChunk) + size);
-				tmp->allocated = false;
-				tmp->size = result->size - size - sizeof(MemoryChunk);
-				tmp->prev = result;
-				tmp->next = result->next;
-				if (tmp->next != 0) {
-					tmp->next->prev = tmp;
+				MemoryChunk* temp = (MemoryChunk*)((size_t)result + sizeof(MemoryChunk) + size);
+				temp->allocated = false;
+				temp->size = result->size - size - sizeof(MemoryChunk);
+				temp->prev = result;
+				temp->next = result->next;
+				if (temp->next != 0) {
+					temp->next->prev = temp;
 				}
-				result->next = tmp;
+				result->next = temp;
 				result->size = size;
 			}
 
@@ -81,8 +78,6 @@ namespace myos {
 				}
 			}
 		}
-
-
 
 	}
 }

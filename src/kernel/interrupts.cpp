@@ -160,8 +160,8 @@ namespace myos {
 				esp = handlers[interruptNumber]->HandlerInterrupt(esp);
 			}
 			else if (interruptNumber != hardwareInterruptOffset) {
-				char* foo = (char*)"[InterruptManager::DoHandleInterrupt] unknown interrupts %lx\n";
-				myos::tools::printfHex(foo, interruptNumber);
+				tools::printf("[InterruptManager::DoHandleInterrupt] unknown interrupts %x\n",
+					interruptNumber);
 			}
 
 			if (interruptNumber == hardwareInterruptOffset) { //根据时钟中断切换任务
