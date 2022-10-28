@@ -2,7 +2,7 @@
 
 namespace myos {
 	namespace kernel {
-		MemoryManager* MemoryManager::activeMemoryManager = 0;
+		MemoryManager* MemoryManager::activeMemoryManager = nullptr;
 		
 		// 该构造函数创建了一个初始的内存块，之后的内存块从该内存块中切割出去
 		MemoryManager::MemoryManager(size_t start, size_t size) {
@@ -10,15 +10,15 @@ namespace myos {
 
 			// 输入的大小小于MemoryChunk的大小，说明内存已经不足了
 			if (size < sizeof(MemoryChunk)) {
-				first = 0;
+				first = nullptr;
 			}
 			else
 			{
 				// start是接下来所有内存分配的起始地址
 				first = (MemoryChunk*)start;
 				first->allocated = false;
-				first->prev = 0;
-				first->next = 0;
+				first->prev = nullptr;
+				first->next = nullptr;
 				// 该内存块保存的大小不包含头部大小（sizeof(MemoryChunk)），size是包括了头部大小的整体尺寸
 				first->size = size - sizeof(MemoryChunk);
 			}
@@ -26,20 +26,20 @@ namespace myos {
 
 		MemoryManager::~MemoryManager() {
 			if (activeMemoryManager == this) {
-				activeMemoryManager = 0;
+				activeMemoryManager = nullptr;
 			}
 		}
 
 		// malloc 分配内存
 		void* MemoryManager::malloc(size_t size) {
-			MemoryChunk* result = 0;
-			for (MemoryChunk* chunk = first; chunk != 0 && result == 0; chunk = chunk->next) {
+			MemoryChunk* result = nullptr;
+			for (MemoryChunk* chunk = first; chunk != nullptr && result == nullptr; chunk = chunk->next) {
 				if (chunk->size > size && !chunk->allocated) {
 					result = chunk;
 				}
 			}
 
-			if (result == 0) return 0;
+			if (result == nullptr) return nullptr;
 
 			if (result->size >= size + sizeof(MemoryChunk) + 1) {
 				MemoryChunk* temp = (MemoryChunk*)((size_t)result + sizeof(MemoryChunk) + size);
@@ -47,7 +47,7 @@ namespace myos {
 				temp->size = result->size - size - sizeof(MemoryChunk);
 				temp->prev = result;
 				temp->next = result->next;
-				if (temp->next != 0) {
+				if (temp->next != nullptr) {
 					temp->next->prev = temp;
 				}
 				result->next = temp;
@@ -62,7 +62,7 @@ namespace myos {
 			MemoryChunk* chunk = (MemoryChunk*)((size_t)ptr - sizeof(MemoryManager));
 
 			chunk->allocated = false;
-			if (chunk->prev != 0 && !chunk->prev->allocated) {
+			if (chunk->prev != nullptr && !chunk->prev->allocated) {
 				chunk->prev->next = chunk->next;
 				chunk->prev->size += chunk->size + sizeof(MemoryChunk);
 				if (chunk->next != 0) {
@@ -70,10 +70,10 @@ namespace myos {
 				}
 				chunk = chunk->prev;
 			}
-			if (chunk->next != 0 && !chunk->next->allocated) {
+			if (chunk->next != nullptr && !chunk->next->allocated) {
 				chunk->size += chunk->next->size + sizeof(MemoryChunk);
 				chunk->next = chunk->next->next;
-				if (chunk->next != 0) {
+				if (chunk->next != nullptr) {
 					chunk->next->prev = chunk;
 				}
 			}
@@ -84,12 +84,12 @@ namespace myos {
 
 
 void* operator new(myos::size_t size) {
-	if (myos::kernel::MemoryManager::activeMemoryManager == 0)return nullptr;
+	if (myos::kernel::MemoryManager::activeMemoryManager == nullptr)return nullptr;
 	return myos::kernel::MemoryManager::activeMemoryManager->malloc(size);
 }
 
 void* operator new[](myos::size_t size) {
-	if (myos::kernel::MemoryManager::activeMemoryManager == 0)return nullptr;
+	if (myos::kernel::MemoryManager::activeMemoryManager == nullptr)return nullptr;
 	return myos::kernel::MemoryManager::activeMemoryManager->malloc(size);
 }
 
@@ -102,13 +102,13 @@ void* operator new[](myos::size_t size, void* ptr) {
 }
 
 void operator delete(void* ptr) {
-	if (myos::kernel::MemoryManager::activeMemoryManager != 0) {
+	if (myos::kernel::MemoryManager::activeMemoryManager != nullptr) {
 		myos::kernel::MemoryManager::activeMemoryManager->free(ptr);
 	}
 }
 
 void operator delete[](void* ptr) {
-	if (myos::kernel::MemoryManager::activeMemoryManager != 0) {
+	if (myos::kernel::MemoryManager::activeMemoryManager != nullptr) {
 		myos::kernel::MemoryManager::activeMemoryManager->free(ptr);
 	}
 }

@@ -55,7 +55,7 @@ namespace myos {
 						PeripheralComponentInterconnectDriverDescriptor dev = GetDeviceDescriptor((uint8_t)bus, device, function);
 						if (dev.vendor_id == 0 || dev.vendor_id == 0xffff) continue;
 
-						/*tools::printf("PCI BUS:");
+						tools::printf("PCI BUS:");
 						tools::printf("%lX", bus & 0xff);
 
 						tools::printf(", DEVICE :");
@@ -69,7 +69,9 @@ namespace myos {
 
 						tools::printf(", DEVICE :");
 						tools::printf("%X", dev.device_id);
-						tools::printf("\n");*/
+
+						tools::printf(", INTS :%X", dev.interrupt);
+						tools::printf("\n");
 
 						for (uint8_t barNum = 0; barNum < 6; barNum++) {
 							// 从配置空间获取基址寄存器
@@ -80,7 +82,7 @@ namespace myos {
 						}
 
 						Driver* driver = GetDriver(dev, interruptManager);
-						if (driver != 0) {
+						if (driver != nullptr) {
 							driverManager->AddDriver(driver);
 						}
 					}
@@ -88,10 +90,7 @@ namespace myos {
 			} 
 		}
 		Driver* PeripheralComponentInterconnectController::GetDriver(PeripheralComponentInterconnectDriverDescriptor dev, InterruptManager* manager){
-			Driver* driver = 0;
-			if (dev.interrupt == 0x0d) {
-				tools::printf("vendor_id:%x,device_id:%x\n", dev.vendor_id, dev.device_id);
-			}
+			Driver* driver = nullptr;
 			switch (dev.vendor_id)
 			{
 			case 0x1022:// AMD

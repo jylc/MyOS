@@ -22,6 +22,7 @@ namespace myos {
 			virtual bool OnEtherFrameReceived(uint8_t* etherFramePayload, uint32_t size);
 			void Send(uint64_t dstMAC_BE, uint8_t* etherFramePayload, uint32_t size);
 
+			uint32_t GetIPAddress();
 		protected:
 			EtherFrameProvider* backend;
 			uint16_t etherType_BE;

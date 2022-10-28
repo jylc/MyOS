@@ -26,6 +26,10 @@ namespace myos {
 			for (int i = 0; str[i] != '\0'; ++i) {
 				switch (str[i]) {
 				case '\n':
+					// 一行中的剩余部分清空
+					for (; x < 80; x++) {
+						VideoMemory[80 * y + x] = (VideoMemory[i] & 0xFF00);
+					}
 					y++;
 					x = 0;
 					break;
@@ -64,14 +68,14 @@ namespace myos {
 			}
 		}
 
-		void scroll(uint8_t&x, uint8_t&y) {
+		void scroll(uint8_t& x, uint8_t& y) {
 			uint8_t attribyte_byte = (0 << 4) | (15 & 0x0f);
 			uint16_t blank = 0x20 | (attribyte_byte << 8);
 			uint16_t* VideoMemory = (uint16_t*)0xb8000;
 			if (y >= 25) {
 				for (uint8_t y_t = 0; y_t < 24; y_t++) {
 					for (uint8_t x_t = 0; x_t < 80; x_t++) {
-						VideoMemory[80 * y_t + x_t] = VideoMemory[80 * (y_t +1) + x_t];
+						VideoMemory[80 * y_t + x_t] = VideoMemory[80 * (y_t + 1) + x_t];
 					}
 				}
 

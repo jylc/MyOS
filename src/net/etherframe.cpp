@@ -22,6 +22,11 @@ namespace myos {
 			backend->Send(dstMAC_BE, etherType_BE, etherFramePayload, size);
 		}
 
+		uint32_t EtherFrameHandler::GetIPAddress() {
+			return backend->GetIPAddress();
+		}
+
+
 		EtherFrameProvider::EtherFrameProvider(AmdAm78c973* backend) :
 			RawDataHandler(backend) {
 			for (uint32_t i = 0; i < 65535; i++) {
@@ -38,7 +43,7 @@ namespace myos {
 			bool sendBack = false;
 			if ((frame->dstMAC_BE == 0xffffffffffff) ||
 				(frame->dstMAC_BE == backend->GetMacAddress())) {
-				if (handlers[frame->etherType_BE] != 0) {
+				if (handlers[frame->etherType_BE] != nullptr) {
 					sendBack = handlers[frame->etherType_BE]->OnEtherFrameReceived(
 						buffer + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader)
 					);

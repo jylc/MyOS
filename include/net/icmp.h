@@ -12,12 +12,12 @@ namespace myos {
 			uint32_t data;
 		}__attribute__((packed));
 
-		class InternetControlMessageProtocol :public InternetProtocolHandler{
+		class InternetControlMessageProtocol :public InternetProtocolHandler {
 		public:
-			InternetControlMessageProtocol(InternetProtocolProvider*backend);
+			InternetControlMessageProtocol(InternetProtocolProvider* backend);
 			~InternetControlMessageProtocol();
 
-			bool OnInternetProtocolRecevied(uint32_t srcIP_BE, uint32_t dstIP_BE, uint8_t* internetProtocolPayload, uint32_t size);
+			bool OnInternetProtocolRecevied(uint32_t srcIP_BE, uint32_t dstIP_BE, uint8_t* internetProtocolPayload, uint32_t size)override;
 
 			void RequestEchoReply(uint32_t ip_be);
 		};

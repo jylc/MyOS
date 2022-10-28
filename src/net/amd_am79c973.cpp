@@ -2,7 +2,6 @@
 #include "print.h"
 namespace myos {
 	namespace net {
-
 		RawDataHandler::RawDataHandler(AmdAm78c973* backend) {
 			this->backend = backend;
 			backend->SetHandler(this);
@@ -29,17 +28,16 @@ namespace myos {
 			registerDataPort(dev->portBase + 0x10),
 			registerAddressPort(dev->portBase + 0x12),
 			resetPort(dev->portBase + 0x14),
-			busConstolRegisterDataPort(dev->portBase + 0x16)
+			busConstrolRegisterDataPort(dev->portBase + 0x16)
 		{
 			tools::printf("AmdAm78c973 init success\n");
+
 			handler = nullptr;
-			uint8_t interruptNo = dev->interrupt + interrupts->HardwareInterruptOffset();
-			tools::printf("amd_am79c973 interrupt:%x\n", interruptNo);
 			currentSendBuffer = 0;
 			currentRecvBuffer = 0;
 
-			uint64_t MAC0 = MACAddress0Port.read() % 256; // 截取低1字节
-			uint64_t MAC1 = MACAddress0Port.read() / 256; // 截取高1字节
+			uint64_t MAC0 = MACAddress0Port.read() % 256;
+			uint64_t MAC1 = MACAddress0Port.read() / 256;
 			uint64_t MAC2 = MACAddress2Port.read() % 256;
 			uint64_t MAC3 = MACAddress2Port.read() / 256;
 			uint64_t MAC4 = MACAddress4Port.read() % 256;
@@ -48,7 +46,7 @@ namespace myos {
 			uint64_t MAC = MAC5 << 40 | MAC4 << 32 | MAC3 << 24 | MAC2 << 16 | MAC1 << 8 | MAC0;
 
 			registerAddressPort.write(20);
-			busConstolRegisterDataPort.write(0x102);
+			busConstrolRegisterDataPort.write(0x102);
 
 			registerAddressPort.write(0);
 			registerDataPort.write(0x04);
@@ -109,17 +107,15 @@ namespace myos {
 		}
 
 		uint32_t AmdAm78c973::HandlerInterrupt(uint32_t esp) {
-			tools::printf("INTERRUPT FROM AMD AM79C973\n");
-
+			// 此处添加了输出语句后会导致registerDataPort.read()读取数据不同，0x06fb时间延迟！
 			registerAddressPort.write(0);
-			uint32_t tmp = registerDataPort.read();
-			tools::printf("[HandlerInterrupt] %x\n",tmp);
+			uint16_t tmp = registerDataPort.read();
 			if ((tmp & 0x8000) == 0x8000) tools::printf("AMD AM79C973 ERROR\n");
 			else if ((tmp & 0x2000) == 0x2000) tools::printf("AMD AM79C973 Collision Error\n");
 			else if ((tmp & 0x1000) == 0x1000) tools::printf("AMD AM79C973 Missed Frame\n");
 			else if ((tmp & 0x0800) == 0x0800) tools::printf("AMD AM79C973 Memory Error\n");
 			else if ((tmp & 0x0400) == 0x0400) Receive();
-			else if ((tmp & 0x0200) == 0x0200) tools::printf("AMD AM79C973 Transmit Interrupt\n");
+			else if ((tmp & 0x0200) == 0x0200) tools::printf("SEND\n");
 
 			registerAddressPort.write(0);
 			registerDataPort.write(tmp);
@@ -136,7 +132,8 @@ namespace myos {
 				size = 1518;
 			}
 			for (uint8_t* src = buffer + size - 1,
-				*dst = (uint8_t*)(sendBufferDesc[sendDesc].address + size - 1); src >= buffer; src--, dst--) {
+				*dst = (uint8_t*)(sendBufferDesc[sendDesc].address + size - 1);
+				src >= buffer; src--, dst--) {
 				*dst = *src;
 			}
 			tools::printf("Sending: ");
@@ -156,16 +153,17 @@ namespace myos {
 		void AmdAm78c973::Receive() {
 			tools::printf("AmdAm78c973 RECEIVED\n");
 			for (; (recvBufferDesc[currentRecvBuffer].flags & 0x80000000) == 0; currentRecvBuffer == (currentRecvBuffer + 1) % 8) {
-				if (!(recvBufferDesc[currentRecvBuffer].flags & 0x40000000) && (recvBufferDesc[currentRecvBuffer].flags & 0x30000000) == 0x30000000) {
+				if (!(recvBufferDesc[currentRecvBuffer].flags & 0x40000000) && (recvBufferDesc[currentRecvBuffer].flags & 0x03000000) == 0x03000000) {
 					uint32_t size = recvBufferDesc[currentRecvBuffer].flags & 0xfff;
 					if (size > 64) {
 						size -= 4;
 					}
 
 					uint8_t* buffer = (uint8_t*)(recvBufferDesc[currentRecvBuffer].address);
-					for (int i = 0; i < size; i++) {
+					for (int i = 0; i < (size > 64 ? 64 : size); i++) {
 						tools::printf("%x ", buffer[i]);
 					}
+					tools::printf("\n");
 					if (handler != nullptr) {
 						if (handler->OnRawDataReceived(buffer, size)) {
 							Send(buffer, size);
@@ -191,31 +189,9 @@ namespace myos {
 		}
 
 		void AmdAm78c973::SetIPAddress(uint32_t ip_be) {
-			tools::printf("[AmdAm78c973::SetIPAddress] start:address1 %x,address2 %x,value %x\n",
-				&initBlock.logicalAddress, ip_be, initBlock.logicalAddress);
-			uint64_t tmp = ip_be;
-			char* p = (char*)&initBlock.logicalAddress;
-			tools::printf("[logicalAddress] :");
-			for (uint8_t i = 0; i < 8; i++) {
-				tools::printf("%#x ", *(p + i));
-			}
-			p = (char*)&ip_be;
-			tools::printf("\n[ip_be] :");
-			for (uint8_t i = 0; i < 4; i++) {
-				tools::printf("%#x ", *(p + i));
-			}
-			tools::printf("\n");
-
-			p = (char*)&tmp;
-			tools::printf("\n[tmp] :");
-			for (uint8_t i = 0; i < 8; i++) {
-				tools::printf("%#x ", *(p + i));
-			}
-			tools::printf("\n");
-
 			// 直接ip_be赋值会出问题，不知道什么原因
-			initBlock.logicalAddress = uint64_t(ip_be);
-			tools::printf("[AmdAm78c973::SetIPAddress] end\n");
+			uint64_t tmp_ip_be = ip_be;
+			initBlock.logicalAddress = tmp_ip_be;
 		}
 	}
 }

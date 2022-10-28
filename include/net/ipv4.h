@@ -8,8 +8,8 @@
 namespace myos {
 	namespace net {
 		struct InternetProtocolV4Message {
-			uint8_t version : 4;
 			uint8_t headerLength : 4;
+			uint8_t version : 4;
 			uint8_t tos;
 			uint16_t totalLength;
 
@@ -50,7 +50,7 @@ namespace myos {
 
 			~InternetProtocolProvider();
 
-			bool OnEtherFrameRecevied(uint8_t* buffer, uint32_t size);
+			bool OnEtherFrameReceived(uint8_t* etherFramePayload, uint32_t size)override;
 			void Send(uint32_t dstIP_BE, uint8_t protol, uint8_t* data, uint32_t size);
 
 			static uint16_t CheckSum(uint16_t* data, uint32_t size);

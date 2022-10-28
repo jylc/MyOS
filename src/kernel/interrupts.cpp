@@ -4,7 +4,7 @@ using namespace myos::tools;
 namespace myos {
 	namespace kernel {
 		InterruptManager::GateDescriptor InterruptManager::interruptDescriptorTable[256];
-		InterruptManager* InterruptManager::ActiveInterruptManager = 0;
+		InterruptManager* InterruptManager::ActiveInterruptManager = nullptr;
 
 		InterruptHandler::InterruptHandler(uint8_t interrupnumber, InterruptManager* interruptManager) {
 			this->interrupnumber = interrupnumber;
@@ -14,7 +14,7 @@ namespace myos {
 
 		InterruptHandler::~InterruptHandler() {
 			if (interruptManager->handlers[interrupnumber] == this) {
-				interruptManager->handlers[interrupnumber] = 0;
+				interruptManager->handlers[interrupnumber] = nullptr;
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace myos {
 
 			const uint8_t IDT_INTERRUPT_GATE = 0xe;
 			for (uint16_t i = 0; i < 256; i++) {
-				handlers[i] = 0;
+				handlers[i] = nullptr;
 				SetInterruptDescriptorTableEntry(i, codeSegment, &InterruptIgnore, 0, IDT_INTERRUPT_GATE);
 			}
 
@@ -132,7 +132,7 @@ namespace myos {
 		InterruptManager::~InterruptManager() {}
 
 		void InterruptManager::Activate() {
-			if (ActiveInterruptManager != 0) {
+			if (ActiveInterruptManager != nullptr) {
 				ActiveInterruptManager->DeActivate();
 			}
 			ActiveInterruptManager = this;
@@ -141,14 +141,14 @@ namespace myos {
 
 		void InterruptManager::DeActivate() {
 			if (ActiveInterruptManager == this) {
-				ActiveInterruptManager = 0;
+				ActiveInterruptManager = nullptr;
 				asm("cli");
 			}
 		}
 
 		// HandleInterrupt 由异常处理函数的汇编代码调用
 		uint32_t InterruptManager::HandleInterrupt(uint8_t interruptNumber, uint32_t esp) {
-			if (ActiveInterruptManager != 0) {
+			if (ActiveInterruptManager != nullptr) {
 				return ActiveInterruptManager->DoHandleInterrupt(interruptNumber, esp);
 			}
 			return esp;
@@ -156,7 +156,8 @@ namespace myos {
 
 		uint32_t InterruptManager::DoHandleInterrupt(uint8_t interruptNumber, uint32_t esp) {
 			// 根据中断向量号寻找中断处理
-			if (handlers[interruptNumber] != 0) {
+			if (handlers[interruptNumber] != nullptr) {
+				//tools::printf("[interruptNumber] %x,esp:%x\n", interruptNumber, esp);
 				esp = handlers[interruptNumber]->HandlerInterrupt(esp);
 			}
 			else if (interruptNumber != hardwareInterruptOffset) {

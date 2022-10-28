@@ -11,10 +11,8 @@
 #include "gui/desktop.h"
 #include "gui/window.h"
 #include "memorymanagement.h"
-#include "net/amd_am79c973.h"
-#include "net/etherframe.h"
-#include "net/arp.h"
-#include "net/ipv4.h"
+#include "net/icmp.h"
+#include "net/udp.h"
 using namespace myos;
 using namespace myos::tools;
 using namespace myos::kernel;
@@ -71,6 +69,18 @@ public:
 	};
 };
 
+class PrintUDPHandler :public net::UserDatagramProtocolHandler {
+public:
+	void HandleUserDatagramProtocolMessage(net::UserDatagramProtocolSocket* socket, uint8_t* data, uint32_t size)override {
+		char* foo = "";
+		printf("[HandleUserDatagramProtocolMessage] ");
+		for (int i = 0; i < size; i++) {
+			foo[i] = data[i];
+			printf(foo);
+		}
+	}
+};
+
 void taskA() {
 	while (true) {
 		printf("A");
@@ -94,11 +104,11 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	uint32_t* memupper = (uint32_t*)((size_t)multiboot_structure + 8);
 	MemoryManager memoryManager(heap, (*memupper) * 1024 - heap - 10 * 1024);
 
-	printf("\n heap: %x\n",heap);
+	printf("\nheap: %x\n", heap);
 
 	void* allocated = memoryManager.malloc(1024);
-	printf("\n allocated: %x\n",allocated);
-	
+	printf("\nallocated: %x\n", allocated);
+
 
 	TaskManager taskManager;
 	Task task1(&gdt, taskA);
@@ -143,34 +153,62 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	desktop.AddChild(&w2);
 #endif // GRAPHICMODE
 
-	uint8_t ip1 = 192, ip2 = 168, ip3 = 12, ip4 = 148;
+	/*uint8_t ip1 = 192, ip2 = 168, ip3 = 12, ip4 = 148;
 	uint32_t ip_be = ((uint32_t)ip4 << 24) |
 		((uint32_t)ip3 << 16) |
 		((uint32_t)ip2 << 8) |
 		(uint32_t)ip1;
 
 	uint8_t gip1 = 192, gip2 = 168, gip3 = 12, gip4 = 1;
-	uint32_t gip_be = ((uint32_t)gip4 << 24 )|
+	uint32_t gip_be = ((uint32_t)gip4 << 24) |
 		((uint32_t)gip3 << 16) |
 		((uint32_t)gip2 << 8) |
-		(uint32_t)gip1;
-	net::AmdAm78c973* eth0 = (net::AmdAm78c973*)(driverManager.drivers[2]);
+		(uint32_t)gip1;*/
 
-	eth0->SetIPAddress(ip_be);
-	net::EtherFrameProvider etherframe(eth0);
+	uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
+	uint32_t ip_be = ((uint32_t)ip4 << 24)
+		| ((uint32_t)ip3 << 16)
+		| ((uint32_t)ip2 << 8)
+		| (uint32_t)ip1;
 
-	net::AddressResolutionProtocol arp(&etherframe);
+	uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
+	uint32_t gip_be = ((uint32_t)gip4 << 24)
+		| ((uint32_t)gip3 << 16)
+		| ((uint32_t)gip2 << 8)
+		| (uint32_t)gip1;
 
 	uint8_t subnet1 = 255, subnet2 = 255, subnet3 = 255, subnet4 = 0;
 	uint32_t subnet_be = ((uint32_t)subnet4 << 24) |
 		((uint32_t)subnet3 << 16) |
 		((uint32_t)subnet2 << 8) |
 		(uint32_t)subnet1;
-	net::InternetProtocolProvider ipv4(&etherframe, &arp, gip_be, subnet_be);
+
+	uint32_t tmp_ip_be = ip_be;
+	uint32_t tmp_gip_be = gip_be;
+	uint32_t tmp_subnet_be = subnet_be;
+	net::AmdAm78c973* eth0 = (net::AmdAm78c973*)(driverManager.drivers[2]);
+
+	eth0->SetIPAddress(ip_be);
+	net::EtherFrameProvider etherframe(eth0);
+	net::AddressResolutionProtocol arp(&etherframe);
+
+
+	printf("ip_be=%#x,gip_be=%#x,subnet_be=%#x\n", tmp_ip_be, gip_be, subnet_be);
+
+	net::InternetProtocolProvider ipv4(&etherframe, &arp, tmp_gip_be, tmp_subnet_be);
+	net::InternetControlMessageProtocol icmp(&ipv4);
+	net::UserDatagramProtocolProvider udp(&ipv4);
 
 	interrupt.Activate();
-	ipv4.Send(gip_be, 0x0008, (uint8_t*)"Hello Network", 13);
+	//ipv4.Send(tmp_gip_be, 0x0008, (uint8_t*)"Hello Network", 13);
 	//arp.Resolve(gip_be);
+	arp.BroadcastMACAddress(tmp_gip_be);
+	icmp.RequestEchoReply(tmp_gip_be);
+
+	PrintUDPHandler udphandler;
+	net::UserDatagramProtocolSocket* socket = udp.Listen(1234);
+	udp.Bind(socket, &udphandler);
+
 	while (1) {
 #ifdef GRAPHICMODE
 		desktop.Draw(&vga);

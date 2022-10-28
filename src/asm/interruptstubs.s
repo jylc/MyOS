@@ -2,12 +2,6 @@
 .section .text
 .extern __ZN4myos6kernel16InterruptManager15HandleInterruptEhj
 
-.macro HandleException num
-.global __ZN4myos6kernel16InterruptManager19HandleException\num\()Ev
- __ZN4myos6kernel16InterruptManager19HandleException\num\()Ev:
-	movb $\num,(interrupternumber)
-	jmp int_bottom
-.endm
 
 .macro HandleInterruptRequest num
 .global __ZN4myos6kernel16InterruptManager26HandleInterruptRequest\num\()Ev
@@ -16,6 +10,14 @@ __ZN4myos6kernel16InterruptManager26HandleInterruptRequest\num\()Ev:
 	pushl $0
 	jmp int_bottom
 .endm
+
+.macro HandleException num
+.global __ZN4myos6kernel16InterruptManager19HandleException\num\()Ev
+ __ZN4myos6kernel16InterruptManager19HandleException\num\()Ev:
+	movb $\num,(interrupternumber)
+	jmp int_bottom
+.endm
+
 
 HandleInterruptRequest 0x00
 HandleInterruptRequest 0x01

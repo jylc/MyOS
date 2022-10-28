@@ -1,5 +1,6 @@
 #include "net/ipv4.h"
 #include "memorymanagement.h"
+#include "tools/print.h"
 namespace myos {
 	namespace net {
 		InternetProtocolHandler::InternetProtocolHandler(InternetProtocolProvider* backend, uint8_t protocol) {
@@ -35,7 +36,7 @@ namespace myos {
 			this->subnetMask = subnetMask;
 		}
 
-		bool InternetProtocolProvider::OnEtherFrameRecevied(uint8_t* buffer, uint32_t size) {
+		bool InternetProtocolProvider::OnEtherFrameReceived(uint8_t* buffer, uint32_t size) {
 			if (size < sizeof(InternetProtocolV4Message)) {
 				return false;
 			}
@@ -48,7 +49,7 @@ namespace myos {
 					length = size;
 				}
 
-				if (handlers[ipMessage->protocol] != 0) {
+				if (handlers[ipMessage->protocol] != nullptr) {
 					sendBack = handlers[ipMessage->protocol]->OnInternetProtocolRecevied(ipMessage->srcIP, ipMessage->dstIP, buffer + 4 * ipMessage->headerLength, length - 4 * ipMessage->headerLength);
 				}
 			}
@@ -59,6 +60,7 @@ namespace myos {
 				ipMessage->srcIP = tmp;
 				
 				ipMessage->timeToLive = 0x40;
+				ipMessage->checkSum = 0;
 				ipMessage->checkSum = CheckSum((uint16_t*)ipMessage, 4 * ipMessage->headerLength);
 			}
 			return sendBack;
@@ -76,6 +78,7 @@ namespace myos {
 
 			message->ident = 0x0100;
 			message->flagsAndOffset = 0x0040;
+			message->timeToLive = 0x40;
 			message->protocol = protocol;
 
 			message->dstIP = dstIP_BE;
@@ -93,18 +96,21 @@ namespace myos {
 				route = gatewayIP;
 			}
 
-			backend->Send(arp->Resolve(route), this->etherType_BE, buffer, sizeof(InternetProtocolV4Message));
+			backend->Send(arp->Resolve(route), this->etherType_BE, buffer, sizeof(InternetProtocolV4Message)+size);
 			kernel::MemoryManager::activeMemoryManager->free(buffer);
 		}
 
 		uint16_t InternetProtocolProvider::CheckSum(uint16_t* data, uint32_t size) {
 			uint32_t tmp = 0;
 			for (int i = 0; i < size / 2; i++) {
-				tmp += ((data[i] & 0xff00) >> 8) | ((data[0] & 0x00ff) << 8);
+				tmp += ((data[i] & 0xff00) >> 8) | ((data[i] & 0x00ff) << 8);
 			}
 
+			if (size % 2) tmp += ((uint16_t)((char*)data)[size - 1]) << 8;
+
 			while (tmp & 0xffff0000) tmp = (tmp & 0xffff) + (tmp >> 16);
-			return ((tmp & 0xff00) >> 8) | ((tmp & 0x00ff) << 8);
+
+			return ((~tmp & 0xff00) >> 8) | ((~tmp & 0x00ff) << 8);
 		}
 	}
 }

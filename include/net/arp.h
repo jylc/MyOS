@@ -12,9 +12,9 @@ namespace myos {
 			uint16_t command;
 
 			uint64_t srcMAC : 48;
-			uint64_t srcIP;
+			uint32_t srcIP;
 			uint64_t dstMAC : 48;
-			uint64_t dstIP;
+			uint32_t dstIP;
 		}__attribute__((packed));
 
 		class AddressResolutionProtocol :public EtherFrameHandler {

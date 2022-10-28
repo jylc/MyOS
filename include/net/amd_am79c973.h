@@ -67,7 +67,7 @@ namespace myos {
 			kernel::Port16Bit registerDataPort;
 			kernel::Port16Bit registerAddressPort;
 			kernel::Port16Bit resetPort;
-			kernel::Port16Bit busConstolRegisterDataPort;
+			kernel::Port16Bit busConstrolRegisterDataPort;
 
 			InitializationBlock initBlock;
 			BufferDescriptor* sendBufferDesc;
