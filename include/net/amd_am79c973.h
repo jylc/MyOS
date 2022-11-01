@@ -73,12 +73,12 @@ namespace myos {
 			BufferDescriptor* sendBufferDesc;
 			// TODO ÎªÊ²Ã´ÊÇ2048 + 15
 			uint8_t sendBufferDescMemory[2048 + 15];
-			uint8_t sendBuffers[8][2048 + 15];
+			uint8_t sendBuffers[2048 + 15][8];
 			uint8_t currentSendBuffer;
 
 			BufferDescriptor* recvBufferDesc;
 			uint8_t recvBufferDescMemory[2048 + 15];
-			uint8_t recvBuffers[8][2048 + 15];
+			uint8_t recvBuffers[2048 + 15][8];
 			uint8_t currentRecvBuffer;
 
 

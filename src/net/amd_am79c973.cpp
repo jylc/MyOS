@@ -45,13 +45,16 @@ namespace myos {
 
 			uint64_t MAC = MAC5 << 40 | MAC4 << 32 | MAC3 << 24 | MAC2 << 16 | MAC1 << 8 | MAC0;
 
+			// 32 bit mode
 			registerAddressPort.write(20);
 			busConstrolRegisterDataPort.write(0x102);
 
+			// STOP reset
 			registerAddressPort.write(0);
 			registerDataPort.write(0x04);
 
-			initBlock.mode = 0;
+			// initBlock
+			initBlock.mode = 0x0000; // promiscuous mode = false
 			initBlock.reserved1 = 0;
 			initBlock.numSendBuffers = 3;
 			initBlock.reserved2 = 0;
@@ -60,27 +63,30 @@ namespace myos {
 			initBlock.reserved3 = 0;
 			initBlock.logicalAddress = 0;
 
-			sendBufferDesc = (BufferDescriptor*)(((uint32_t)&sendBufferDescMemory[0] + 15) & 0xfff0);
+			sendBufferDesc = (BufferDescriptor*)((((uint32_t)&sendBufferDescMemory[0]) + 15) & ~((uint32_t)0xF));
 			initBlock.sendBufferDescAddress = (uint32_t)sendBufferDesc;
-			recvBufferDesc = (BufferDescriptor*)(((uint32_t)&recvBufferDescMemory[0] + 15) & 0xfff0);
+			recvBufferDesc = (BufferDescriptor*)((((uint32_t)&recvBufferDescMemory[0]) + 15) & ~((uint32_t)0xF));
 			initBlock.recvBufferDescAddress = (uint32_t)recvBufferDesc;
 
-			for (uint8_t i = 0; i < 8; i++) {
-				sendBufferDesc[i].address = (((uint32_t)&sendBuffers[i] + 15) & 0xfff0);
-				sendBufferDesc[i].flags = 0xf7ff;
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				sendBufferDesc[i].address = (((uint32_t)&sendBuffers[i]) + 15) & ~(uint32_t)0xF;
+				sendBufferDesc[i].flags = 0x7FF
+					| 0xF000;
 				sendBufferDesc[i].flags2 = 0;
 				sendBufferDesc[i].avail = 0;
 
-				recvBufferDesc[i].address = (((uint32_t)&recvBuffers[i] + 15) & 0xfff0);
-				recvBufferDesc[i].flags = 0xf7ff | 0x80000000;
+				recvBufferDesc[i].address = (((uint32_t)&recvBuffers[i]) + 15) & ~(uint32_t)0xF;
+				recvBufferDesc[i].flags = 0xF7FF
+					| 0x80000000;
 				recvBufferDesc[i].flags2 = 0;
 				recvBufferDesc[i].avail = 0;
 			}
 
 			registerAddressPort.write(1);
-			registerDataPort.write((uint32_t)&initBlock);
+			registerDataPort.write((uint32_t)(&initBlock) & 0xFFFF);
 			registerAddressPort.write(2);
-			registerDataPort.write((uint32_t)&initBlock >> 16);
+			registerDataPort.write(((uint32_t)(&initBlock) >> 16) & 0xFFFF);
 		}
 
 		AmdAm78c973::~AmdAm78c973() {
@@ -152,6 +158,7 @@ namespace myos {
 
 		void AmdAm78c973::Receive() {
 			tools::printf("AmdAm78c973 RECEIVED\n");
+			tools::printf("[Receive] Line158 flags=%x\n", recvBufferDesc[currentRecvBuffer].flags);
 			for (; (recvBufferDesc[currentRecvBuffer].flags & 0x80000000) == 0; currentRecvBuffer == (currentRecvBuffer + 1) % 8) {
 				if (!(recvBufferDesc[currentRecvBuffer].flags & 0x40000000) && (recvBufferDesc[currentRecvBuffer].flags & 0x03000000) == 0x03000000) {
 					uint32_t size = recvBufferDesc[currentRecvBuffer].flags & 0xfff;

@@ -1,4 +1,4 @@
-#ifndef MYOS_PIV4_H
+#ifndef MYOS_IPV4_H
 #define MYOS_IPV4_H
 
 #include "common/types.h"
@@ -65,4 +65,4 @@ namespace myos {
 	}
 }
 
-#endif // !MYOS_PIV4_H
+#endif // !MYOS_IPV4_H

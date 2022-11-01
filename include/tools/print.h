@@ -14,6 +14,8 @@ namespace myos {
 		char* printf_test(const char* _fmt, ...);
 		void clear_screen();
 		void scroll(uint8_t& x, uint8_t& y);
+		void scroll_buffer(uint8_t& x, uint8_t& y);
+		static uint8_t buff_x = 0, buff_y = 0;
 	}
 }
 

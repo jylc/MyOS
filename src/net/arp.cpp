@@ -34,6 +34,11 @@ namespace myos {
 						if (numCacheEntries < 128) {
 							IPcache[numCacheEntries] = arp->srcIP;
 							MACcache[numCacheEntries] = arp->srcMAC;
+							tools::printf("[OnEtherFrameReceived] ");
+							char* ptr = (char*)&(MACcache[numCacheEntries]);
+							for (int j = 0; j < 6; j++) {
+								tools::printf("%02x ", ptr[j]);
+							}
 							numCacheEntries++;
 						}
 						break;
@@ -43,6 +48,7 @@ namespace myos {
 			return false;
 		}
 
+		// RequestMACAddress 发送广播MAC，获取IP对应的MAC
 		void AddressResolutionProtocol::RequestMACAddress(uint32_t IP_BE) {
 			AddressResolutionProtocolMessage arp;
 			arp.hardwareType = 0x0100;
@@ -65,7 +71,7 @@ namespace myos {
 			}
 			while (result == 0xffffffffffff) {
 				result = GetMACFromCache(IP_BE);
-				break;
+				//break;
 			}
 			return result;
 		}

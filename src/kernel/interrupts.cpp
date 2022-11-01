@@ -132,10 +132,14 @@ namespace myos {
 		InterruptManager::~InterruptManager() {}
 
 		void InterruptManager::Activate() {
+			tools::printf("[Activate] Line135\n");
 			if (ActiveInterruptManager != nullptr) {
+				tools::printf("[Activate] Line137\n");
 				ActiveInterruptManager->DeActivate();
 			}
+			tools::printf("[Activate] Line140\n");
 			ActiveInterruptManager = this;
+			tools::printf("[Activate] Line142\n");
 			asm("sti");
 		}
 
