@@ -44,7 +44,8 @@ namespace myos {
 			InternetProtocolV4Message* ipMessage = (InternetProtocolV4Message*)buffer;
 			bool sendBack = false;
 			if (ipMessage->dstIP == backend->GetIPAddress()) {
-				int length = ipMessage->totalLength;
+				int length = ((ipMessage->totalLength & 0xff00) >> 8) | ((ipMessage->totalLength & 0x00ff) << 8);
+				tools::printf("[%s-%d] length:%x\n",__FUNCTION__,__LINE__,length);
 				if (length > size) {
 					length = size;
 				}

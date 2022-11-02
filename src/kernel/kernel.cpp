@@ -73,10 +73,10 @@ class PrintUDPHandler :public net::UserDatagramProtocolHandler {
 public:
 	void HandleUserDatagramProtocolMessage(net::UserDatagramProtocolSocket* socket, uint8_t* data, uint32_t size)override {
 		char* foo = "";
-		printf("[HandleUserDatagramProtocolMessage] ");
+		printf("[%s-%d] ",__FUNCTION__,__LINE__);
 		for (int i = 0; i < size; i++) {
-			foo[i] = data[i];
-			printf(foo);
+			foo[0] = data[i];
+			printf("%c", foo[0]);
 		}
 	}
 };
@@ -85,11 +85,12 @@ class PrintTCPHandler :public net::TransmissionControlProtocolHandler {
 public:
 	bool HandleTransmissionControlProtocolMessage(net::TransmissionControlProtocolSocket* socket, uint8_t* data, uint32_t size)override {
 		char foo[1] = {""};
-		printf("[HandleTransmissionControlProtocolMessage] ");
+		printf("[%s-%d] size=%x\n", __FUNCTION__, __LINE__,size);
 		for (int i = 0; i < size; i++) {
 			foo[0] = data[i];
-			printf(foo);
+			printf("%c",foo[0]);
 		}
+		foo[1] = ' ';
 		printf("\n");
 		return true;
 	}
@@ -192,47 +193,31 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 	uint32_t tmp_subnet_be = subnet_be;
 	net::AmdAm78c973* eth0 = (net::AmdAm78c973*)(driverManager.drivers[2]);
 
-	tools::printf("[kernelMain] Line195\n");
 	eth0->SetIPAddress(ip_be);
-	tools::printf("[kernelMain] Line197\n");
 
 
 	net::EtherFrameProvider etherframe(eth0);
-	tools::printf("[kernelMain] Line201\n");
 	net::AddressResolutionProtocol arp(&etherframe);
-
-
-	printf("ip_be=%#x,gip_be=%#x,subnet_be=%#x\n", tmp_ip_be, gip_be, subnet_be);
 
 	// IPV4 ÉèÖÃÒÔÌ«Íø£¨etherframe£©£¬Íø¹ØµØÖ·£¨tmp_gip_be£©£¬×ÓÍøÑÚÂë£¨tmp_subnet_be£©
 	net::InternetProtocolProvider ipv4(&etherframe, &arp, tmp_gip_be, tmp_subnet_be);
-	tools::printf("[kernelMain] Line209\n");
 	net::InternetControlMessageProtocol icmp(&ipv4);
-	tools::printf("[kernelMain] Line211\n");
 	net::UserDatagramProtocolProvider udp(&ipv4);
-	tools::printf("[kernelMain] Line213\n");
 	net::TransmissionControlProtocolProvider tcp(&ipv4);
-	tools::printf("[kernelMain] Line215\n");
 
 	interrupt.Activate();
-	tools::printf("[kernelMain] Line218\n");
 
 	arp.BroadcastMACAddress(tmp_gip_be);
-	tools::printf("[kernelMain] Line221\n");
 	/*icmp.RequestEchoReply(tmp_gip_be);*/
-	
+
 	/*PrintUDPHandler udphandler;
 	net::UserDatagramProtocolSocket* socket = udp.Listen(1234);
 	udp.Bind(socket, &udphandler);*/
 	//tcp.Connect(tmp_gip_be, 1234);
 	PrintTCPHandler tcphandler;
-	tools::printf("[kernelMain] Line217\n");
 	net::TransmissionControlProtocolSocket* tcpsocket = tcp.Connect(tmp_gip_be, 1234);
-	tools::printf("[kernelMain] Line219\n");
 	tcp.Bind(tcpsocket, &tcphandler);
-	tools::printf("[kernelMain] Line221\n");
 	tcpsocket->Send((uint8_t*)"hello world!", 12);
-	tools::printf("[kernelMain] Line223\n");
 
 	while (1) {
 #ifdef GRAPHICMODE

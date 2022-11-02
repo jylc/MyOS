@@ -143,9 +143,9 @@ namespace myos {
 				*dst = *src;
 			}
 			tools::printf("Sending: ");
-			for (int i = 0; i < size; i++) {
+			/*for (int i = 0; i < size; i++) {
 				tools::printf("%x ", buffer[i]);
-			}
+			}*/
 			tools::printf("\n");
 
 			sendBufferDesc[sendDesc].avail = 0;
@@ -158,16 +158,15 @@ namespace myos {
 
 		void AmdAm78c973::Receive() {
 			tools::printf("AmdAm78c973 RECEIVED\n");
-			tools::printf("[Receive] Line158 flags=%x\n", recvBufferDesc[currentRecvBuffer].flags);
-			for (; (recvBufferDesc[currentRecvBuffer].flags & 0x80000000) == 0; currentRecvBuffer == (currentRecvBuffer + 1) % 8) {
+			for (; (recvBufferDesc[currentRecvBuffer].flags & 0x80000000) == 0; currentRecvBuffer = (currentRecvBuffer + 1) % 8) {
 				if (!(recvBufferDesc[currentRecvBuffer].flags & 0x40000000) && (recvBufferDesc[currentRecvBuffer].flags & 0x03000000) == 0x03000000) {
-					uint32_t size = recvBufferDesc[currentRecvBuffer].flags & 0xfff;
+					uint32_t size = recvBufferDesc[currentRecvBuffer].flags2 & 0xfff;
 					if (size > 64) {
 						size -= 4;
 					}
 
 					uint8_t* buffer = (uint8_t*)(recvBufferDesc[currentRecvBuffer].address);
-					for (int i = 0; i < (size > 64 ? 64 : size); i++) {
+					for (int i = 0; i < size; i++) {
 						tools::printf("%x ", buffer[i]);
 					}
 					tools::printf("\n");

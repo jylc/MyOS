@@ -10,7 +10,7 @@ namespace myos {
 		static char buf[BUF_SIZE];
 		void printf_screen(const char* str);
 		void printf(const char* _fmt, ...);
-		void printfHex(const char* str, uint8_t key);
+		void printfHex( uint8_t key);
 		char* printf_test(const char* _fmt, ...);
 		void clear_screen();
 		void scroll(uint8_t& x, uint8_t& y);

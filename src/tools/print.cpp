@@ -67,8 +67,8 @@ namespace myos {
 		}
 
 
-		void printfHex(const char* str, uint8_t key) {
-			printf(str, key);
+		void printfHex(uint8_t key) {
+			printf("%02x ", key);
 		}
 
 		void clear_screen() {
@@ -104,7 +104,7 @@ namespace myos {
 			uint8_t attribyte_byte = (0 << 4) | (15 & 0x0f);
 			uint16_t blank = 0x20 | (attribyte_byte << 8);
 			if (y >= 50) {
-				for (uint8_t y_t = 0; y_t <49; y_t++) {
+				for (uint8_t y_t = 0; y_t < 49; y_t++) {
 					for (uint8_t x_t = 0; x_t < 80; x_t++) {
 						screen_pages_buffer[80 * y_t + x_t] = screen_pages_buffer[80 * (y_t + 1) + x_t];
 					}

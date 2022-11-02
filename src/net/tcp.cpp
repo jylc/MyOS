@@ -22,7 +22,7 @@ namespace myos {
 
 		bool TransmissionControlProtocolSocket::HandleTransmissionControlProtocolMessage(uint8_t* data, uint32_t size) {
 			if (handler != nullptr) {
-				handler->HandleTransmissionControlProtocolMessage(this, data, size);
+				return handler->HandleTransmissionControlProtocolMessage(this, data, size);
 			}
 			return false;
 		}
@@ -31,7 +31,7 @@ namespace myos {
 			while (state != ESTABLISHED)
 			{
 			}
-			backend->Send(this, data, size, PSH | ACK);
+			backend->Send(this, data, size);
 		}
 
 		void TransmissionControlProtocolSocket::Disconnect() {
@@ -119,24 +119,12 @@ namespace myos {
 				}
 			}
 			bool reset = false;
-
-			tools::printf("[TransmissionControlProtocolProvider::OnInternetProtocolRecevied] Line84\n");
-			tools::printf("flags: %x", msg->flags);
-			tools::printf("socket:");
-			if (socket == nullptr) {
-				tools::printf("is null");
-			}
-			else {
-				ShowState(socket->state);
-			}
-
-			tools::printf("B-localhost:%x B-localport:%x B-remotehost:%x B-remoteport:%x\n", dstIP_BE, msg->dstPort, srcIP_BE, msg->srcPort);
-
 			if (socket != nullptr && msg->flags & RST) {
 				socket->state = CLOSED;
 			}
 
 			if (socket != nullptr && socket->state != CLOSED) {
+
 				switch ((msg->flags) & (SYN | ACK | FIN))
 				{
 				case SYN:
@@ -205,6 +193,7 @@ namespace myos {
 					if (msg->flags == ACK)break;
 				default:
 					if (socket->acknowledgementNumber == bigEndian32(msg->sequenceNumber)) {
+						tools::printf("[%s-%d] size=%x,msg->headerSize32 * 4=%x \n", __FUNCTION__, __LINE__, size, msg->headerSize32 * 4);
 						reset = !(socket->HandleTransmissionControlProtocolMessage(internetProtocolPayload + msg->headerSize32 * 4, size - msg->headerSize32 * 4));
 						if (!reset) {
 							int x = 0;
@@ -220,7 +209,6 @@ namespace myos {
 					}
 				}
 			}
-
 			if (reset)
 			{
 				if (socket != nullptr)
@@ -267,7 +255,6 @@ namespace myos {
 				sockets[numSockets++] = socket;
 				socket->state = SYN_SENT;
 				socket->sequenceNumber = 0xbeefcafe;
-				socket->acknowledgementNumber = 0;
 				Send(socket, 0, 0, SYN);
 			}
 			return socket;
@@ -306,6 +293,7 @@ namespace myos {
 			msg->acknowledgementNumber = bigEndian32(socket->acknowledgementNumber);
 			msg->sequenceNumber = bigEndian32(socket->sequenceNumber);
 			msg->reserved = 0;
+			//tools::printf("[TransmissionControlProtocolProvider::Send] Line309, flags:%x\n", flags);
 			msg->flags = flags;
 			msg->windowSize = 0xffff;
 			msg->urgentPrt = 0;
